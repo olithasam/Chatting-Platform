@@ -22,12 +22,11 @@ public class ChatServer {
     private final Set<String> bannedWords = new HashSet<>(Arrays.asList(
             "badword1", "badword2", "badword3" // Add your banned words here
     ));
-    private final String fileStoragePath = "server_files/";
 
     public ChatServer(int port) {
         this.port = port;
         try {
-            Files.createDirectories(Paths.get(fileStoragePath));
+            Files.createDirectories(Paths.get("file_storage"));
         } catch (IOException e) {
             System.err.println("Error creating file storage directory: " + e.getMessage());
         }
@@ -95,20 +94,7 @@ public class ChatServer {
         }
     }
 
-    public void handleFileUpload(String fileName, String fileContent, ClientHandler sender) {
-        try {
-            byte[] fileBytes = Base64.getDecoder().decode(fileContent);
-            Path filePath = Paths.get(fileStoragePath + fileName);
-            Files.write(filePath, fileBytes);
-
-            String message = String.format("[FILE] %s shared a file: %s",
-                    sender.getUsername(), fileName);
-            broadcastMessage(message, sender);
-            logMessage(message);
-        } catch (IOException e) {
-            System.err.println("Error saving file: " + e.getMessage());
-        }
-    }
+    // Remove handleFileUpload method as it's no longer needed
 
     private String filterMessage(String message) {
         for (String word : bannedWords) {
@@ -291,7 +277,6 @@ public class ChatServer {
                 out = new PrintWriter(clientSocket.getOutputStream(), true);
                 in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
-                out.println("Please enter your username:");
                 username = in.readLine();
                 if (username == null || username.trim().isEmpty()) {
                     username = "Anonymous";
@@ -302,14 +287,7 @@ public class ChatServer {
 
                 String inputLine;
                 while (connected && (inputLine = in.readLine()) != null) {
-                    if (inputLine.startsWith("/file ")) {
-                        String[] parts = inputLine.split(" ", 3);
-                        if (parts.length == 3) {
-                            server.handleFileUpload(parts[1], parts[2], this);
-                        }
-                    } else {
-                        server.broadcastMessage(inputLine, this);
-                    }
+                    server.broadcastMessage(inputLine, this);
                 }
             } catch (IOException e) {
                 System.err.println("Error handling client: " + e.getMessage());
