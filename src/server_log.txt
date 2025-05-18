@@ -1,0 +1,17 @@
+2025-05-18 11:54:47 - Server started on port 9000
+2025-05-18 11:56:45 - User connected: sam
+2025-05-18 11:57:07 - User disconnected: Anonymous
+2025-05-18 11:57:12 - User connected: sam1
+2025-05-18 11:57:32 - User connected: sam2
+2025-05-18 12:01:45 - User disconnected: sam2
+2025-05-18 12:01:47 - User disconnected: sam1
+2025-05-18 12:01:51 - User disconnected: sam
+2025-05-18 13:02:21 - Server started on port 9000
+2025-05-18 13:03:20 - User connected: olitha
+2025-05-18 13:03:36 - User connected: nimshan
+2025-05-18 13:03:50 - nimshan: [FILE] nimshan shared a file: ridelanka.mp4
+2025-05-18 13:03:50 - [FILE] nimshan shared a file: ridelanka.mp4
+2025-05-18 13:04:44 - User disconnected: olitha
+2025-05-18 13:06:19 - nimshan: [FILE] nimshan shared a file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-18 13:06:19 - [FILE] nimshan shared a file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-18 13:06:53 - User disconnected: nimshan
