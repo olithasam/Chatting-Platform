@@ -15,3 +15,19 @@
 2025-05-18 13:06:19 - nimshan: [FILE] nimshan shared a file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
 2025-05-18 13:06:19 - [FILE] nimshan shared a file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
 2025-05-18 13:06:53 - User disconnected: nimshan
+2025-05-18 14:54:02 - Server started on port 9000
+2025-05-18 14:55:23 - User connected: olitha3
+2025-05-18 14:55:38 - User connected: nimshan
+2025-05-18 14:55:53 - User connected: suuub
+2025-05-18 14:56:13 - suuub: hey
+2025-05-18 14:56:23 - nimshan: hi guys
+2025-05-18 14:56:29 - olitha3: whats up
+2025-05-18 14:56:48 - suuub: i'll send u the file
+2025-05-18 14:57:00 - nimshan: okay
+2025-05-18 14:57:08 - suuub: [FILE] suuub shared a file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-18 14:57:08 - [FILE] suuub shared a file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-18 14:57:59 - suuub: ****
+2025-05-18 14:58:15 - nimshan: ****
+2025-05-18 14:59:48 - suuub: @nimshan hey man
+2025-05-18 15:03:19 - nimshan: [FILE] nimshan shared a file: Pic_20241207_232632_1920x1080.jpeg
+2025-05-18 15:03:19 - [FILE] nimshan shared a file: Pic_20241207_232632_1920x1080.jpeg

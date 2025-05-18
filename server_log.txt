@@ -18,3 +18,12 @@
 2025-05-18 13:01:08 - sam3: [FILE] sam3 shared a file: ridelanka.mp4
 2025-05-18 13:01:08 - [FILE] sam3 shared a file: ridelanka.mp4
 2025-05-18 13:01:35 - User disconnected: sam3
+2025-05-18 14:48:05 - Server started on port 9000
+2025-05-18 14:48:25 - User connected: olitha1
+2025-05-18 14:50:11 - Server stopped
+2025-05-18 14:50:40 - User connected: oliii
+2025-05-18 14:50:58 - oliii: hey
+2025-05-18 14:51:12 - User disconnected: oliii
+2025-05-18 14:51:14 - User disconnected: olitha1
+2025-05-18 14:52:19 - Server stopped
+2025-05-18 14:52:51 - Server started on port 9000
