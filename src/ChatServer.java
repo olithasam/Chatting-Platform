@@ -22,11 +22,12 @@ public class ChatServer {
     private final Set<String> bannedWords = new HashSet<>(Arrays.asList(
             "badword1", "badword2", "badword3" // Add your banned words here
     ));
+    private final String fileStoragePath = "server_files/";
 
     public ChatServer(int port) {
         this.port = port;
         try {
-            Files.createDirectories(Paths.get("file_storage"));
+            Files.createDirectories(Paths.get(fileStoragePath));
         } catch (IOException e) {
             System.err.println("Error creating file storage directory: " + e.getMessage());
         }
@@ -94,7 +95,35 @@ public class ChatServer {
         }
     }
 
-    // Remove handleFileUpload method as it's no longer needed
+    public void handleFileUpload(String fileName, String fileContent, ClientHandler sender) {
+        try {
+            byte[] fileBytes = Base64.getDecoder().decode(fileContent);
+            Path filePath = Paths.get(fileStoragePath + fileName);
+            Files.write(filePath, fileBytes);
+
+            // Check if the file is an image
+            String fileExtension = fileName.toLowerCase();
+            boolean isImage = fileExtension.endsWith(".jpg") || 
+                            fileExtension.endsWith(".jpeg") || 
+                            fileExtension.endsWith(".png") || 
+                            fileExtension.endsWith(".gif");
+
+            String fileType = isImage ? "image" : "file";
+            // Modified message format to include [FILE:] tag
+            String message = String.format("[FILE:%s] %s shared a %s",
+                    fileName, sender.getUsername(), fileType);
+            
+            // Send the actual file content to all clients
+            for (ClientHandler client : clients) {
+                if (client != sender) {
+                    client.sendMessage(message);
+                }
+            }
+            logMessage(message);
+        } catch (IOException e) {
+            System.err.println("Error saving file: " + e.getMessage());
+        }
+    }
 
     private String filterMessage(String message) {
         for (String word : bannedWords) {
