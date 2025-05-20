@@ -55,17 +55,18 @@ public class ChatClient {
             while (running && (message = in.readLine()) != null) {
                 final String finalMessage = message;
                 SwingUtilities.invokeLater(() -> {
-                    if (finalMessage.startsWith("[FILE:")) {
-                        // Extract filename from the message
+                    if (finalMessage.contains("[FILE:")) {
+                        // Extract sender and filename only
+                        int senderEnd = finalMessage.indexOf("[FILE:");
+                        String sender = senderEnd > 0 ? finalMessage.substring(0, senderEnd).trim() : "Unknown";
                         int startIndex = finalMessage.indexOf("[FILE:") + 6;
-                        int endIndex = finalMessage.indexOf("]");
+                        int endIndex = finalMessage.indexOf("]", startIndex);
                         if (startIndex >= 6 && endIndex > startIndex) {
                             String fileName = finalMessage.substring(startIndex, endIndex);
-                            chatArea.append(finalMessage + " (Click to download)\n");
+                            chatArea.append(sender + " shared a file: " + fileName + " (Click to download)\n");
                             makeFileClickable(fileName);
-                        } else {
-                            chatArea.append(finalMessage + "\n");
                         }
+                        // Do NOT display the rest of the message (encoded file data)
                     } else if (!finalMessage.startsWith("[You]")) {
                         // Only append messages that aren't our own
                         chatArea.append(finalMessage + "\n");
@@ -353,9 +354,10 @@ public class ChatClient {
                 String encodedFile = java.util.Base64.getEncoder().encodeToString(fileBytes);
                 out.println("/file " + file.getName() + " " + encodedFile);
                 
-                // Display message that you shared a file
-                chatArea.append("[You] shared a file: " + file.getName() + "\n");
+                // Display message that you shared a file with a consistent format
+                chatArea.append("[You] shared a file: " + file.getName() + " (Click to download)\n");
                 chatArea.setCaretPosition(chatArea.getDocument().getLength());
+                makeFileClickable(file.getName());
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(frame, "Error sharing file: " + e.getMessage(),
                         "File Error", JOptionPane.ERROR_MESSAGE);

@@ -54,6 +54,34 @@ public class ChatServer {
     }
 
     public void broadcastMessage(String message, ClientHandler sender) {
+        // Special handling for file messages
+        if (message.startsWith("/file ")) {
+            // Extract file name from the message
+            String[] parts = message.split(" ", 3);
+            if (parts.length >= 3) {
+                String fileName = parts[1];
+                String fileData = parts[2];
+                
+                // Send file notification to all clients
+                String fileNotification = sender.getUsername() + " [FILE:" + fileName + "]";
+                messageLog.add(fileNotification);
+                logMessage(fileNotification);
+                
+                // Send to all other clients
+                for (ClientHandler client : clients) {
+                    if (client != sender) {
+                        client.sendMessage(fileNotification);
+                    }
+                }
+                
+                // Store the file data for later retrieval (optional)
+                // You could implement a map to store fileData by fileName
+                
+                return; // Exit early since we've handled this message
+            }
+        }
+        
+        // Regular message handling (unchanged)
         String filtered = filterMessage(message);
         String formatted = sender.getUsername() + ": " + filtered;
         messageLog.add(formatted);
