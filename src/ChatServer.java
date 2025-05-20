@@ -4,33 +4,20 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import com.sun.net.httpserver.HttpServer;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpExchange;
+import javax.swing.*;
 import java.nio.file.*;
-import java.util.Base64;
 
 public class ChatServer {
     private ServerSocket serverSocket;
     private final List<ClientHandler> clients = new CopyOnWriteArrayList<>();
     private final List<String> messageLog = new CopyOnWriteArrayList<>();
     private final int port;
-    private HttpServer webServer;
-    private final int webPort = 8080;
     private boolean running = false;
     private final String logFilePath = "server_log.txt";
-    private final Set<String> bannedWords = new HashSet<>(Arrays.asList(
-            "badword1", "badword2", "badword3" // Add your banned words here
-    ));
-    private final String fileStoragePath = "server_files/";
+    private final Set<String> bannedWords = new HashSet<>(Arrays.asList("badword1", "badword2"));
 
     public ChatServer(int port) {
         this.port = port;
-        try {
-            Files.createDirectories(Paths.get(fileStoragePath));
-        } catch (IOException e) {
-            System.err.println("Error creating file storage directory: " + e.getMessage());
-        }
     }
 
     public void start() {
@@ -38,98 +25,49 @@ public class ChatServer {
             serverSocket = new ServerSocket(port);
             running = true;
             System.out.println("Chat server started on port " + port);
-            startWebServer();
             logMessage("Server started on port " + port);
 
             while (running) {
-                try {
-                    Socket clientSocket = serverSocket.accept();
-                    ClientHandler clientHandler = new ClientHandler(clientSocket, this);
-                    clients.add(clientHandler);
-                    new Thread(clientHandler).start();
-                    System.out.println("New client connected: " + clientSocket.getInetAddress().getHostAddress());
-                } catch (IOException e) {
-                    if (running) {
-                        System.err.println("Error accepting client connection: " + e.getMessage());
-                    }
-                }
+                Socket clientSocket = serverSocket.accept();
+                ClientHandler clientHandler = new ClientHandler(clientSocket, this);
+                clients.add(clientHandler);
+                new Thread(clientHandler).start();
+                System.out.println("New client connected: " + clientHandler.getUsername());
             }
         } catch (IOException e) {
-            System.err.println("Could not start server: " + e.getMessage());
+            System.err.println("Error: " + e.getMessage());
         }
     }
 
     public void stop() {
         running = false;
         try {
-            if (serverSocket != null && !serverSocket.isClosed()) {
-                serverSocket.close();
-            }
-
             for (ClientHandler client : clients) {
                 client.disconnect();
             }
-            clients.clear();
-
-            if (webServer != null) {
-                webServer.stop(0);
+            if (serverSocket != null && !serverSocket.isClosed()) {
+                serverSocket.close();
             }
-
-            logMessage("Server stopped");
-            System.out.println("Server stopped");
         } catch (IOException e) {
-            System.err.println("Error stopping server: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     public void broadcastMessage(String message, ClientHandler sender) {
-        String filteredMessage = filterMessage(message);
-        String formattedMessage = sender.getUsername() + ": " + filteredMessage;
-        messageLog.add(formattedMessage);
-        logMessage(formattedMessage);
-
+        String filtered = filterMessage(message);
+        String formatted = sender.getUsername() + ": " + filtered;
+        messageLog.add(formatted);
+        logMessage(formatted);
         for (ClientHandler client : clients) {
             if (client != sender) {
-                client.sendMessage(formattedMessage);
+                client.sendMessage(formatted);
             }
-        }
-    }
-
-    public void handleFileUpload(String fileName, String fileContent, ClientHandler sender) {
-        try {
-            byte[] fileBytes = Base64.getDecoder().decode(fileContent);
-            Path filePath = Paths.get(fileStoragePath + fileName);
-            Files.write(filePath, fileBytes);
-
-            // Check if the file is an image
-            String fileExtension = fileName.toLowerCase();
-            boolean isImage = fileExtension.endsWith(".jpg") || 
-                            fileExtension.endsWith(".jpeg") || 
-                            fileExtension.endsWith(".png") || 
-                            fileExtension.endsWith(".gif");
-
-            String fileType = isImage ? "image" : "file";
-            // Modified message format to include [FILE:] tag
-            String message = String.format("[FILE:%s] %s shared a %s",
-                    fileName, sender.getUsername(), fileType);
-            
-            // Send the actual file content to all clients
-            for (ClientHandler client : clients) {
-                if (client != sender) {
-                    client.sendMessage(message);
-                }
-            }
-            logMessage(message);
-        } catch (IOException e) {
-            System.err.println("Error saving file: " + e.getMessage());
         }
     }
 
     private String filterMessage(String message) {
         for (String word : bannedWords) {
-            if (message.toLowerCase().contains(word.toLowerCase())) {
-                message = message.replaceAll("(?i)" + word, "****");
-            }
+            message = message.replaceAll("(?i)" + word, "****");
         }
         return message;
     }
@@ -137,158 +75,34 @@ public class ChatServer {
     public void removeClient(ClientHandler client) {
         clients.remove(client);
         logMessage("User disconnected: " + client.getUsername());
-        System.out.println("Client disconnected: " + client.getUsername());
+        System.out.println("Disconnected: " + client.getUsername());
     }
 
-    private void logMessage(String message) {
-        LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String timestamp = now.format(formatter);
-        String logEntry = timestamp + " - " + message;
-
-        try (FileWriter fw = new FileWriter(logFilePath, true);
-             BufferedWriter bw = new BufferedWriter(fw);
-             PrintWriter out = new PrintWriter(bw)) {
-            out.println(logEntry);
+    private void logMessage(String msg) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(logFilePath, true))) {
+            String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            writer.println(time + " - " + msg);
         } catch (IOException e) {
-            System.err.println("Error writing to log file: " + e.getMessage());
+            System.err.println("Log error: " + e.getMessage());
         }
     }
 
-    private void startWebServer() {
-        try {
-            webServer = HttpServer.create(new InetSocketAddress(webPort), 0);
-            webServer.createContext("/", new StatsHandler());
-            webServer.createContext("/users", new UsersHandler());
-            webServer.createContext("/messages", new MessageHistoryHandler());
-            webServer.setExecutor(null);
-            webServer.start();
-            System.out.println("Web server started on port " + webPort);
-        } catch (IOException e) {
-            System.err.println("Could not start web server: " + e.getMessage());
-        }
-    }
-
-    class StatsHandler implements HttpHandler {
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            String response = "<!DOCTYPE html>\n" +
-                    "<html>\n" +
-                    "<head>\n" +
-                    "    <title>Chat Server Statistics</title>\n" +
-                    "    <style>\n" +
-                    "        body { font-family: Arial, sans-serif; margin: 20px; }\n" +
-                    "        h1 { color: #333; }\n" +
-                    "        .stat { margin-bottom: 10px; }\n" +
-                    "    </style>\n" +
-                    "</head>\n" +
-                    "<body>\n" +
-                    "    <h1>Chat Server Status</h1>\n" +
-                    "    <div class=\"stat\">Server running: " + running + "</div>\n" +
-                    "    <div class=\"stat\">Port: " + port + "</div>\n" +
-                    "    <div class=\"stat\">Connected clients: " + clients.size() + "</div>\n" +
-                    "    <div class=\"stat\">Messages exchanged: " + messageLog.size() + "</div>\n" +
-                    "    <p><a href=\"/users\">View connected users</a></p>\n" +
-                    "    <p><a href=\"/messages\">View message history</a></p>\n" +
-                    "</body>\n" +
-                    "</html>";
-
-            exchange.sendResponseHeaders(200, response.length());
-            OutputStream os = exchange.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
-        }
-    }
-
-    class UsersHandler implements HttpHandler {
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            StringBuilder usersHtml = new StringBuilder();
-            for (ClientHandler client : clients) {
-                usersHtml.append("<div class=\"user\">").append(client.getUsername()).append("</div>\n");
-            }
-
-            String response = "<!DOCTYPE html>\n" +
-                    "<html>\n" +
-                    "<head>\n" +
-                    "    <title>Connected Users</title>\n" +
-                    "    <style>\n" +
-                    "        body { font-family: Arial, sans-serif; margin: 20px; }\n" +
-                    "        h1 { color: #333; }\n" +
-                    "        .user { margin-bottom: 5px; padding: 5px; background-color: #f0f0f0; }\n" +
-                    "    </style>\n" +
-                    "</head>\n" +
-                    "<body>\n" +
-                    "    <h1>Connected Users</h1>\n" +
-                    "    <div class=\"users\">\n" +
-                    usersHtml.toString() +
-                    "    </div>\n" +
-                    "    <p><a href=\"/\">Back to statistics</a></p>\n" +
-                    "</body>\n" +
-                    "</html>";
-
-            exchange.sendResponseHeaders(200, response.length());
-            OutputStream os = exchange.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
-        }
-    }
-
-    class MessageHistoryHandler implements HttpHandler {
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-            StringBuilder messagesHtml = new StringBuilder();
-            for (String message : messageLog) {
-                messagesHtml.append("<div class=\"message\">")
-                        .append(message)
-                        .append("</div>\n");
-            }
-
-            String response = "<!DOCTYPE html>\n" +
-                    "<html>\n" +
-                    "<head>\n" +
-                    "    <title>Message History</title>\n" +
-                    "    <style>\n" +
-                    "        body { font-family: Arial, sans-serif; margin: 20px; }\n" +
-                    "        h1 { color: #333; }\n" +
-                    "        .message { margin-bottom: 5px; padding: 5px; border-bottom: 1px solid #eee; }\n" +
-                    "    </style>\n" +
-                    "</head>\n" +
-                    "<body>\n" +
-                    "    <h1>Message History</h1>\n" +
-                    "    <div class=\"messages\">\n" +
-                    messagesHtml.toString() +
-                    "    </div>\n" +
-                    "    <p><a href=\"/\">Back to statistics</a></p>\n" +
-                    "</body>\n" +
-                    "</html>";
-
-            exchange.sendResponseHeaders(200, response.length());
-            OutputStream os = exchange.getResponseBody();
-            os.write(response.getBytes());
-            os.close();
-        }
+    public int getOnlineUserCount() {
+        return clients.size();
     }
 
     public static void main(String[] args) {
         int port = 9000;
-
-        if (args.length > 0) {
-            try {
-                port = Integer.parseInt(args[0]);
-            } catch (NumberFormatException e) {
-                System.err.println("Invalid port number. Using default port 9000.");
-            }
-        }
-
         ChatServer server = new ChatServer(port);
-        server.start();
+        new Thread(server::start).start();  // Run server on separate thread
 
-        Runtime.getRuntime().addShutdownHook(new Thread(server::stop));
+        // Start admin GUI
+        SwingUtilities.invokeLater(() -> new AdminGUI(server));
     }
 
+    // Inner class for client handling
     static class ClientHandler implements Runnable {
-        private final Socket clientSocket;
+        private final Socket socket;
         private final ChatServer server;
         private PrintWriter out;
         private BufferedReader in;
@@ -296,30 +110,25 @@ public class ChatServer {
         private boolean connected = true;
 
         public ClientHandler(Socket socket, ChatServer server) {
-            this.clientSocket = socket;
+            this.socket = socket;
             this.server = server;
         }
 
-        @Override
         public void run() {
             try {
-                out = new PrintWriter(clientSocket.getOutputStream(), true);
-                in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
+                out = new PrintWriter(socket.getOutputStream(), true);
+                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 username = in.readLine();
-                if (username == null || username.trim().isEmpty()) {
-                    username = "Anonymous";
-                }
-
-                out.println("Welcome to the chat, " + username + "!");
+                if (username == null || username.trim().isEmpty()) username = "Anonymous";
+                out.println("Welcome, " + username + "!");
                 server.logMessage("User connected: " + username);
 
-                String inputLine;
-                while (connected && (inputLine = in.readLine()) != null) {
-                    server.broadcastMessage(inputLine, this);
+                String line;
+                while (connected && (line = in.readLine()) != null) {
+                    server.broadcastMessage(line, this);
                 }
             } catch (IOException e) {
-                System.err.println("Error handling client: " + e.getMessage());
+                System.err.println("Client error: " + e.getMessage());
             } finally {
                 disconnect();
             }
@@ -331,26 +140,18 @@ public class ChatServer {
             }
         }
 
-        public String getUsername() {
-            return username;
-        }
-
         public void disconnect() {
             connected = false;
             try {
-                if (out != null) {
-                    out.close();
-                }
-                if (in != null) {
-                    in.close();
-                }
-                if (clientSocket != null && !clientSocket.isClosed()) {
-                    clientSocket.close();
-                }
-                server.removeClient(this);
+                if (socket != null) socket.close();
             } catch (IOException e) {
-                System.err.println("Error disconnecting client: " + e.getMessage());
+                e.printStackTrace();
             }
+            server.removeClient(this);
+        }
+
+        public String getUsername() {
+            return username;
         }
     }
 }
