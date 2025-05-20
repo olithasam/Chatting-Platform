@@ -7,3 +7,17 @@
 2025-05-21 01:13:44 - User disconnected: pubudu
 2025-05-21 01:13:45 - olitha: /quit
 2025-05-21 01:13:45 - User disconnected: olitha
+2025-05-21 01:18:53 - User connected: olitha
+2025-05-21 01:18:58 - olitha: hi bro
+2025-05-21 01:19:12 - User connected: byd
+2025-05-21 01:19:16 - byd: hey
+2025-05-21 01:19:31 - byd [FILE:Pic_20241207_232703_1920x1080.jpeg]
+2025-05-21 01:19:37 - olitha: /download Pic_20241207_232703_1920x1080.jpeg
+2025-05-21 01:20:34 - olitha: okay
+2025-05-21 01:22:23 - byd [FILE:COM5015M_Programming_04_Assignment_Brief.v3[1].docx]
+2025-05-21 01:22:38 - olitha: /download COM5015M_Programming_04_Assignment_Brief.v3[1
+2025-05-21 01:22:47 - olitha: /download COM5015M_Programming_04_Assignment_Brief.v3[1
+2025-05-21 01:23:50 - byd: /quit
+2025-05-21 01:23:50 - User disconnected: byd
+2025-05-21 01:23:52 - olitha: /quit
+2025-05-21 01:23:52 - User disconnected: olitha

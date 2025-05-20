@@ -5,7 +5,9 @@ import javax.swing.border.*;
 import java.io.*;
 import java.net.*;
 import java.nio.file.*;
-import java.util.Base64;
+import java.util.Base64; // Ensure this is imported
+import java.util.regex.Matcher; // For regex
+import java.util.regex.Pattern; // For regex
 
 public class ChatClient {
     private JFrame frame;
@@ -19,6 +21,10 @@ public class ChatClient {
     private BufferedReader in;
     private String username;
     private boolean running = false;
+    // Add a pattern to identify file links in the chat area
+    private static final Pattern FILE_LINK_PATTERN = Pattern.compile("(\\S+) shared a file: (.*?) \\(Click to download\\)");
+    private static final Pattern MY_FILE_LINK_PATTERN = Pattern.compile("\\[You\\] shared a file: (.*?) \\(Click to download\\)");
+
 
     public ChatClient(String serverAddress, int port) {
         initializeGUI();
@@ -55,22 +61,41 @@ public class ChatClient {
             while (running && (message = in.readLine()) != null) {
                 final String finalMessage = message;
                 SwingUtilities.invokeLater(() -> {
-                    if (finalMessage.contains("[FILE:")) {
-                        // Extract sender and filename only
+                    if (finalMessage.startsWith("[FILEDATA:")) {
+                        // Handle incoming file data
+                        // Format: [FILEDATA:fileName:base64EncodedData]
+                        try {
+                            String[] parts = finalMessage.substring(10).split(":", 2);
+                            if (parts.length == 2) {
+                                String fileName = parts[0];
+                                String base64Data = parts[1];
+                                saveFile(fileName, base64Data);
+                            } else {
+                                chatArea.append("[System] Received corrupted file data.\n");
+                            }
+                        } catch (Exception e) {
+                            chatArea.append("[System] Error processing file data: " + e.getMessage() + "\n");
+                        }
+                    } else if (finalMessage.contains("[FILE:")) {
+                        // Extract sender and filename
                         int senderEnd = finalMessage.indexOf("[FILE:");
                         String sender = senderEnd > 0 ? finalMessage.substring(0, senderEnd).trim() : "Unknown";
                         int startIndex = finalMessage.indexOf("[FILE:") + 6;
                         int endIndex = finalMessage.indexOf("]", startIndex);
                         if (startIndex >= 6 && endIndex > startIndex) {
                             String fileName = finalMessage.substring(startIndex, endIndex);
+                            // Display format: User shared a file: filename.txt (Click to download)
                             chatArea.append(sender + " shared a file: " + fileName + " (Click to download)\n");
+                            // The makeFileClickable method is called, but the actual click handling
+                            // will be done by the MouseListener on chatArea.
                             makeFileClickable(fileName);
                         }
-                        // Do NOT display the rest of the message (encoded file data)
                     } else if (!finalMessage.startsWith("[You]")) {
                         // Only append messages that aren't our own
                         chatArea.append(finalMessage + "\n");
                     }
+                    // Ensure chat area scrolls to the bottom
+                    chatArea.setCaretPosition(chatArea.getDocument().getLength());
                 });
             }
         } catch (IOException e) {
@@ -119,6 +144,47 @@ public class ChatClient {
         chatArea.setForeground(new Color(30, 41, 59));
         chatArea.setLineWrap(true);
         chatArea.setWrapStyleWord(true);
+
+        // Add MouseListener to chatArea for handling file link clicks
+        chatArea.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getButton() == MouseEvent.BUTTON1) { // Left click
+                    try {
+                        int offset = chatArea.viewToModel2D(e.getPoint());
+                        int lineNum = chatArea.getLineOfOffset(offset);
+                        int lineStartOffset = chatArea.getLineStartOffset(lineNum);
+                        int lineEndOffset = chatArea.getLineEndOffset(lineNum);
+                        String lineText = chatArea.getText(lineStartOffset, lineEndOffset - lineStartOffset).trim();
+
+                        Matcher matcher = FILE_LINK_PATTERN.matcher(lineText);
+                        Matcher myMatcher = MY_FILE_LINK_PATTERN.matcher(lineText);
+
+                        String fileNameToDownload = null;
+                        if (matcher.find()) {
+                            fileNameToDownload = matcher.group(2);
+                        } else if (myMatcher.find()) {
+                            fileNameToDownload = myMatcher.group(1);
+                        }
+
+                        if (fileNameToDownload != null) {
+                            final String finalFileName = fileNameToDownload;
+                            // Confirm before downloading
+                            int choice = JOptionPane.showConfirmDialog(frame,
+                                    "Download file: " + finalFileName + "?",
+                                    "Confirm Download",
+                                    JOptionPane.YES_NO_OPTION);
+                            if (choice == JOptionPane.YES_OPTION) {
+                                requestFile(finalFileName);
+                            }
+                        }
+                    } catch (Exception ex) {
+                        // Ignore if click is not on a valid line or other parsing error
+                        // System.err.println("Error processing click: " + ex.getMessage());
+                    }
+                }
+            }
+        });
         
         // Scrollpane for chat area
         JScrollPane scrollPane = new JScrollPane(chatArea);
@@ -246,102 +312,15 @@ public class ChatClient {
 
     private void sendMessage() {
         String message = messageField.getText().trim();
-        if (!message.isEmpty() && out != null) {
+        if (!message.isEmpty() && !message.equals("Type your message...")) {
             out.println(message);
-            chatArea.append("[You]: " + message + "\n");
+            chatArea.append("[You]: " + message + "\n"); // Display user's own message
             chatArea.setCaretPosition(chatArea.getDocument().getLength());
-            messageField.setText("");
-            // Keep focus in message field after sending
-            messageField.requestFocusInWindow();
-        }
-    }
-
-    private void makeFileClickable(String fileName) {
-        chatArea.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                try {
-                    String text = chatArea.getText();
-                    int clickPosition = chatArea.viewToModel2D(e.getPoint());
-                    int lineStart = text.lastIndexOf('\n', clickPosition) + 1;
-                    int lineEnd = text.indexOf('\n', clickPosition);
-                    if (lineEnd == -1) lineEnd = text.length();
-                    String line = text.substring(lineStart, lineEnd);
-                    
-                    // Check if the click is on a file line
-                    if (line.contains("[FILE:") && line.contains(fileName)) {
-                        String fileExtension = fileName.toLowerCase();
-                        boolean isImage = fileExtension.endsWith(".jpg") || 
-                                        fileExtension.endsWith(".jpeg") || 
-                                        fileExtension.endsWith(".png") || 
-                                        fileExtension.endsWith(".gif");
-                        
-                        if (isImage) {
-                            openImage(fileName);
-                        } else {
-                            downloadFile(fileName);
-                        }
-                    }
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(frame, "Error accessing file: " + ex.getMessage(),
-                            "File Error", JOptionPane.ERROR_MESSAGE);
-                }
-            }
-        });
-    }
-
-    private void openImage(String fileName) {
-        try {
-            // Request the file from server
-            out.println("/download " + fileName);
-            
-            // Read the file content from server
-            String response = in.readLine();
-            if (response.startsWith("FILE_CONTENT:")) {
-                String base64Content = response.substring("FILE_CONTENT:".length());
-                byte[] imageBytes = Base64.getDecoder().decode(base64Content);
-                
-                // Create a temporary file
-                Path tempFile = Files.createTempFile("chat_image_", fileName);
-                Files.write(tempFile, imageBytes);
-                
-                // Open the image using desktop
-                Desktop.getDesktop().open(tempFile.toFile());
-                
-                // Delete the temp file when the application exits
-                tempFile.toFile().deleteOnExit();
-            } else {
-                throw new IOException("Invalid server response");
-            }
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(frame, "Error opening image: " + e.getMessage(),
-                    "Image Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    private void downloadFile(String fileName) {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setSelectedFile(new File(fileName));
-        if (fileChooser.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION) {
-            File selectedFile = fileChooser.getSelectedFile();
-            try {
-                // Request the file from server
-                out.println("/download " + fileName);
-                
-                // Read the file content from server
-                String response = in.readLine();
-                if (response.startsWith("FILE_CONTENT:")) {
-                    String base64Content = response.substring("FILE_CONTENT:".length());
-                    byte[] fileBytes = Base64.getDecoder().decode(base64Content);
-                    Files.write(selectedFile.toPath(), fileBytes);
-                    chatArea.append("File downloaded successfully: " + selectedFile.getPath() + "\n");
-                } else {
-                    throw new IOException("Invalid server response");
-                }
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(frame, "Error downloading file: " + e.getMessage(),
-                        "Download Error", JOptionPane.ERROR_MESSAGE);
-            }
+            messageField.setText(""); // Clear the input field after sending
+            // Optionally, reset placeholder if you want it back immediately
+            // messageField.setText("Type your message...");
+            // messageField.setForeground(Color.GRAY);
+            // messageField.requestFocusInWindow(); // Or let focusLost handle it
         }
     }
 
@@ -350,14 +329,15 @@ public class ChatClient {
         if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
             try {
-                byte[] fileBytes = java.nio.file.Files.readAllBytes(file.toPath());
-                String encodedFile = java.util.Base64.getEncoder().encodeToString(fileBytes);
+                byte[] fileBytes = Files.readAllBytes(file.toPath());
+                String encodedFile = Base64.getEncoder().encodeToString(fileBytes);
+                // Command to server: /file fileName base64Data
                 out.println("/file " + file.getName() + " " + encodedFile);
                 
-                // Display message that you shared a file with a consistent format
+                // Display message that you shared a file
                 chatArea.append("[You] shared a file: " + file.getName() + " (Click to download)\n");
                 chatArea.setCaretPosition(chatArea.getDocument().getLength());
-                makeFileClickable(file.getName());
+                makeFileClickable(file.getName()); // Call this, though MouseListener handles clicks
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(frame, "Error sharing file: " + e.getMessage(),
                         "File Error", JOptionPane.ERROR_MESSAGE);
@@ -365,6 +345,56 @@ public class ChatClient {
         }
     }
 
+    // Method to request a file from the server
+    private void requestFile(String fileName) {
+        if (out != null && running) {
+            out.println("/download " + fileName); // Send download command to server
+            chatArea.append("[System] Requesting to download " + fileName + "...\n");
+            chatArea.setCaretPosition(chatArea.getDocument().getLength());
+        } else {
+            chatArea.append("[System] Not connected to server. Cannot download file.\n");
+            chatArea.setCaretPosition(chatArea.getDocument().getLength());
+        }
+    }
+
+    // Method to save the received file
+    private void saveFile(String fileName, String base64Data) {
+        try {
+            byte[] decodedBytes = Base64.getDecoder().decode(base64Data);
+            
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setSelectedFile(new File(fileName)); // Suggest original filename
+            if (fileChooser.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION) {
+                File fileToSave = fileChooser.getSelectedFile();
+                Files.write(fileToSave.toPath(), decodedBytes);
+                JOptionPane.showMessageDialog(frame, "File '" + fileName + "' downloaded successfully to:\n" + fileToSave.getAbsolutePath(),
+                        "Download Complete", JOptionPane.INFORMATION_MESSAGE);
+                chatArea.append("[System] File '" + fileName + "' downloaded to " + fileToSave.getAbsolutePath() + "\n");
+            } else {
+                chatArea.append("[System] Download cancelled for file: " + fileName + "\n");
+            }
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(frame, "Error decoding file data for '" + fileName + "'. It might be corrupted.",
+                    "Download Error", JOptionPane.ERROR_MESSAGE);
+            chatArea.append("[System] Error decoding file data for: " + fileName + "\n");
+        } 
+        catch (IOException e) {
+            JOptionPane.showMessageDialog(frame, "Error saving file '" + fileName + "': " + e.getMessage(),
+                    "Download Error", JOptionPane.ERROR_MESSAGE);
+            chatArea.append("[System] Error saving file: " + fileName + "\n");
+        }
+        chatArea.setCaretPosition(chatArea.getDocument().getLength());
+    }
+
+    // Placeholder for makeFileClickable, as primary logic is in MouseListener
+    private void makeFileClickable(String fileName) {
+        // This method is called when a file message is appended.
+        // The actual click handling is done by the MouseListener on chatArea.
+        // You could add specific styling here if using JTextPane, but for JTextArea,
+        // the MouseListener approach is more straightforward for click actions.
+        // System.out.println("File link available for: " + fileName);
+    }
+    
     private void disconnect() {
         running = false;
         try {
