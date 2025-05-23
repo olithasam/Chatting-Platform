@@ -1,11 +1,10 @@
 import java.io.*;
 import java.net.*;
-import java.util.*;
-import java.util.concurrent.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.concurrent.*;
 import javax.swing.*;
-import java.nio.file.*;
 
 public class ChatServer {
     private ServerSocket serverSocket;
@@ -181,5 +180,28 @@ public class ChatServer {
         public String getUsername() {
             return username;
         }
+    }
+    // Add these methods to your ChatServer class
+    
+    public Set<String> getBannedWords() {
+        return new HashSet<>(bannedWords);
+    }
+    
+    public void addBannedWord(String word) {
+        bannedWords.add(word);
+        logMessage("Added banned word: " + word);
+    }
+    
+    public void removeBannedWord(String word) {
+        bannedWords.remove(word);
+        logMessage("Removed banned word: " + word);
+    }
+    
+    public List<String> getUsernames() {
+        List<String> usernames = new ArrayList<>();
+        for (ClientHandler client : clients) {
+            usernames.add(client.getUsername());
+        }
+        return usernames;
     }
 }

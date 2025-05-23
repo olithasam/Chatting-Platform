@@ -21,3 +21,37 @@
 2025-05-21 01:23:50 - User disconnected: byd
 2025-05-21 01:23:52 - olitha: /quit
 2025-05-21 01:23:52 - User disconnected: olitha
+2025-05-23 09:13:28 - Server started on port 9000
+2025-05-23 09:13:57 - User connected: suwishka
+2025-05-23 09:16:02 - suwishka [FILE:1CV.pdf]
+2025-05-23 09:16:15 - suwishka: /download 1CV.pdf
+2025-05-23 09:17:42 - suwishka [FILE:Screenshot]
+2025-05-23 09:17:46 - suwishka: /download Screenshot 2025-05-23 at 00.28.08.png
+2025-05-23 09:24:47 - User connected: Iphone
+2025-05-23 09:25:05 - suwishka: hi
+2025-05-23 09:25:08 - Iphone: dnd
+2025-05-23 09:33:47 - Server started on port 9000
+2025-05-23 09:34:31 - User connected: Anonymous
+2025-05-23 09:34:31 - User disconnected: Anonymous
+2025-05-23 09:34:55 - User connected: sub
+2025-05-23 09:35:13 - sub [FILE:suwishka.html]
+2025-05-23 09:35:54 - Removed banned word: badword1
+2025-05-23 09:36:00 - sub: ****
+2025-05-23 09:36:34 - sub: badword 1
+2025-05-23 09:42:37 - User disconnected: sub
+2025-05-23 09:42:53 - Server started on port 9000
+2025-05-23 09:44:33 - User connected: user1
+2025-05-23 09:48:53 - User disconnected: user1
+2025-05-23 09:49:25 - Server started on port 9000
+2025-05-23 09:51:55 - Server started on port 9000
+2025-05-23 09:52:06 - User connected: sd
+2025-05-23 09:52:26 - sd: hioh
+2025-05-23 10:02:57 - User disconnected: sd
+2025-05-23 10:03:05 - User connected: User147
+2025-05-23 10:03:06 - User147: /quit
+2025-05-23 10:03:06 - User disconnected: User147
+2025-05-23 10:03:11 - Server started on port 9000
+2025-05-23 10:04:04 - Server started on port 9000
+2025-05-23 10:05:26 - Server started on port 9000
+2025-05-23 10:07:06 - User connected: sub
+2025-05-23 10:07:26 - sub: mama I myself
