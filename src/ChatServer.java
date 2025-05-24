@@ -61,8 +61,20 @@ public class ChatServer {
                 String fileName = parts[1];
                 String fileData = parts[2];
                 
+                // Check if it's an image file
+                boolean isImage = fileName.toLowerCase().endsWith(".jpg") || 
+                                 fileName.toLowerCase().endsWith(".jpeg") || 
+                                 fileName.toLowerCase().endsWith(".png") || 
+                                 fileName.toLowerCase().endsWith(".gif");
+                
                 // Send file notification to all clients
-                String fileNotification = sender.getUsername() + " [FILE:" + fileName + "]";
+                String fileNotification;
+                if (isImage) {
+                    fileNotification = sender.getUsername() + " [IMAGE:" + fileName + ":" + fileData + "]";
+                } else {
+                    fileNotification = sender.getUsername() + " [FILE:" + fileName + "]";
+                }
+                
                 messageLog.add(fileNotification);
                 logMessage(fileNotification);
                 
@@ -72,9 +84,6 @@ public class ChatServer {
                         client.sendMessage(fileNotification);
                     }
                 }
-                
-                // Store the file data for later retrieval (optional)
-                // You could implement a map to store fileData by fileName
                 
                 return; // Exit early since we've handled this message
             }
@@ -182,7 +191,6 @@ public class ChatServer {
         }
     }
     // Add these methods to your ChatServer class
-    
     public Set<String> getBannedWords() {
         return new HashSet<>(bannedWords);
     }
