@@ -14,6 +14,7 @@ public class ChatServer {
     private boolean running = false;
     private final String logFilePath = "server_log.txt";
     private final Set<String> bannedWords = new HashSet<>(Arrays.asList("badword1", "badword2"));
+    private final Map<String, String> sharedFilesData = new ConcurrentHashMap<>(); // To temporarily store file data
 
     public ChatServer(int port) {
         this.port = port;
@@ -52,54 +53,62 @@ public class ChatServer {
         }
     }
 
+    private boolean isImageFile(String fileName) {
+        String lowerName = fileName.toLowerCase();
+        return lowerName.endsWith(".png") || lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg") || lowerName.endsWith(".gif");
+    }
+
     public void broadcastMessage(String message, ClientHandler sender) {
-        // Special handling for file messages
         if (message.startsWith("/file ")) {
-            // Extract file name from the message
             String[] parts = message.split(" ", 3);
             if (parts.length >= 3) {
                 String fileName = parts[1];
-                String fileData = parts[2];
-                
-                // Check if it's an image file
-                boolean isImage = fileName.toLowerCase().endsWith(".jpg") || 
-                                 fileName.toLowerCase().endsWith(".jpeg") || 
-                                 fileName.toLowerCase().endsWith(".png") || 
-                                 fileName.toLowerCase().endsWith(".gif");
-                
-                // Send file notification to all clients
-                String fileNotification;
-                if (isImage) {
-                    fileNotification = sender.getUsername() + " [IMAGE:" + fileName + ":" + fileData + "]";
-                } else {
-                    fileNotification = sender.getUsername() + " [FILE:" + fileName + "]";
-                }
-                
-                messageLog.add(fileNotification);
-                logMessage(fileNotification);
-                
-                // Send to all other clients
+                String base64FileData = parts[2]; // This is the Base64 encoded file data
+
+                // Store the file data on the server temporarily, keyed by filename (consider a more robust key)
+                // For simplicity, we'll use filename. In a real app, manage this carefully to avoid conflicts and memory issues.
+                sharedFilesData.put(fileName, base64FileData);
+
+                String notificationMessage = sender.getUsername() + " [FILE_SHARED:" + fileName + "]";
+
+                messageLog.add(sender.getUsername() + " shared file: " + fileName);
+                logMessage(sender.getUsername() + " shared file: " + fileName);
+
                 for (ClientHandler client : clients) {
-                    if (client != sender) {
-                        client.sendMessage(fileNotification);
-                    }
+                    client.sendMessage(notificationMessage);
                 }
-                
-                return; // Exit early since we've handled this message
+                return;
             }
+        } else if (message.startsWith("/download ")) { // Generic download request
+            String[] parts = message.split(" ", 2);
+            if (parts.length == 2) {
+                String requestedFileName = parts[1];
+                String fileData = sharedFilesData.get(requestedFileName);
+
+                if (fileData != null) {
+                    // Send the file data directly to the requesting client
+                    sender.sendMessage("[FILEDATA:" + requestedFileName + ":" + fileData + "]");
+                    logMessage(sender.getUsername() + " downloaded file: " + requestedFileName);
+                } else {
+                    sender.sendMessage("[System] File not found or no longer available: " + requestedFileName);
+                    logMessage("File not found for download request from " + sender.getUsername() + ": " + requestedFileName);
+                }
+            }
+            return;
         }
-        
-        // Regular message handling (unchanged)
+
+        // Regular message handling
         String filtered = filterMessage(message);
         String formatted = sender.getUsername() + ": " + filtered;
         messageLog.add(formatted);
         logMessage(formatted);
         for (ClientHandler client : clients) {
-            if (client != sender) {
+            if (client != sender) { // Regular messages are not sent back to the sender
                 client.sendMessage(formatted);
             }
         }
     }
+    
 
     private String filterMessage(String message) {
         for (String word : bannedWords) {
@@ -211,5 +220,28 @@ public class ChatServer {
             usernames.add(client.getUsername());
         }
         return usernames;
+    }
+    
+   
+
+    // Helper method to determine file type from extension
+    private String getFileType(String fileName) {
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex > 0) {
+            return fileName.substring(dotIndex + 1);
+        }
+        return "file";
+    }
+
+    // Helper method to calculate approximate file size
+    private String getFileSize(String base64Data) {
+        int bytes = (int) (base64Data.length() * 0.75); // Approximate base64 to bytes conversion
+        if (bytes < 1024) {
+            return bytes + " B";
+        } else if (bytes < 1024 * 1024) {
+            return (bytes / 1024) + " KB";
+        } else {
+            return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
+        }
     }
 }
