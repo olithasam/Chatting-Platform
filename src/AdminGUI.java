@@ -2,6 +2,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import javax.swing.*;
 import javax.swing.border.*;
 
@@ -10,6 +12,7 @@ public class AdminGUI extends JFrame {
     private JButton openLogButton;
     private JButton refreshButton;
     private JButton banWordButton;
+    private JButton statsPageButton; // New button for stats page
     private JList<String> userList;
     private DefaultListModel<String> userListModel;
     private ChatServer server;
@@ -158,6 +161,12 @@ public class AdminGUI extends JFrame {
         banWordButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         banWordButton.setMaximumSize(new Dimension(200, 40));
         
+        // New button for stats page
+        statsPageButton = createStyledButton("Open Stats Page");
+        statsPageButton.addActionListener(e -> openStatsPage());
+        statsPageButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        statsPageButton.setMaximumSize(new Dimension(200, 40));
+        
         // Add spacing between buttons
         panel.add(Box.createVerticalStrut(20));
         panel.add(openLogButton);
@@ -165,6 +174,8 @@ public class AdminGUI extends JFrame {
         panel.add(refreshButton);
         panel.add(Box.createVerticalStrut(15));
         panel.add(banWordButton);
+        panel.add(Box.createVerticalStrut(15));
+        panel.add(statsPageButton); // Add the new button
         panel.add(Box.createVerticalGlue());
         
         return panel;
@@ -291,6 +302,15 @@ public class AdminGUI extends JFrame {
         
         dialog.add(panel);
         dialog.setVisible(true);
+    }
+    
+    // Method to open stats page in browser
+    private void openStatsPage() {
+        try {
+            Desktop.getDesktop().browse(new URI(server.getStatsUrl()));
+        } catch (IOException | URISyntaxException e) {
+            showErrorMessage("Error opening stats page: " + e.getMessage());
+        }
     }
     
     private void showErrorMessage(String message) {

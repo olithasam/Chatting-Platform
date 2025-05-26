@@ -6,6 +6,12 @@ import java.util.*;
 import java.util.concurrent.*;
 import javax.swing.*;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import java.net.InetSocketAddress;
+import java.time.Duration;
+
 public class ChatServer {
     private ServerSocket serverSocket;
     private final List<ClientHandler> clients = new CopyOnWriteArrayList<>();
@@ -15,18 +21,25 @@ public class ChatServer {
     private final String logFilePath = "server_log.txt";
     private final Set<String> bannedWords = new HashSet<>(Arrays.asList("badword1", "badword2"));
     private final Map<String, String> sharedFilesData = new ConcurrentHashMap<>(); // To temporarily store file data
-
+    private HttpServer httpServer; // HTTP server for stats page
+    private final int httpPort = 8080; // Port for HTTP server
+    private LocalDateTime serverStartTime; // Move this field here
+    
     public ChatServer(int port) {
         this.port = port;
     }
-
+    
     public void start() {
         try {
             serverSocket = new ServerSocket(port);
             running = true;
+            serverStartTime = LocalDateTime.now(); // Record server start time
             System.out.println("Chat server started on port " + port);
             logMessage("Server started on port " + port);
-
+            
+            // Start HTTP server for stats page
+            startHttpServer();
+            
             while (running) {
                 Socket clientSocket = serverSocket.accept();
                 ClientHandler clientHandler = new ClientHandler(clientSocket, this);
@@ -38,7 +51,20 @@ public class ChatServer {
             System.err.println("Error: " + e.getMessage());
         }
     }
-
+    
+    private void startHttpServer() {
+        try {
+            httpServer = HttpServer.create(new InetSocketAddress(httpPort), 0);
+            httpServer.createContext("/stats", new StatsHandler());
+            httpServer.setExecutor(null); // Use the default executor
+            httpServer.start();
+            System.out.println("HTTP server started on port " + httpPort);
+            logMessage("HTTP server for stats page started on port " + httpPort);
+        } catch (IOException e) {
+            System.err.println("HTTP server error: " + e.getMessage());
+        }
+    }
+    
     public void stop() {
         running = false;
         try {
@@ -47,6 +73,9 @@ public class ChatServer {
             }
             if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
+            }
+            if (httpServer != null) {
+                httpServer.stop(0); // Stop HTTP server immediately
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -235,15 +264,117 @@ public class ChatServer {
         return "file";
     }
 
-    // Helper method to calculate approximate file size
-    private String getFileSize(String base64Data) {
-        int bytes = (int) (base64Data.length() * 0.75); // Approximate base64 to bytes conversion
-        if (bytes < 1024) {
-            return bytes + " B";
-        } else if (bytes < 1024 * 1024) {
-            return (bytes / 1024) + " KB";
-        } else {
-            return String.format("%.1f MB", bytes / (1024.0 * 1024.0));
+    // Handler for the stats page
+    class StatsHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+            String response = generateStatsHtml();
+            exchange.getResponseHeaders().set("Content-Type", "text/html");
+            exchange.sendResponseHeaders(200, response.length());
+            try (OutputStream os = exchange.getResponseBody()) {
+                os.write(response.getBytes());
+            }
         }
+        
+        private String generateStatsHtml() {
+            StringBuilder html = new StringBuilder();
+            html.append("<!DOCTYPE html>\n");
+            html.append("<html>\n");
+            html.append("<head>\n");
+            html.append("<title>Chat Server Statistics</title>\n");
+            html.append("<meta http-equiv=\"refresh\" content=\"5\">\n"); // Auto-refresh every 5 seconds
+            html.append("<style>\n");
+            html.append("body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(to bottom right, #40486c, #859398); color: white; margin: 0; padding: 20px; }\n");
+            html.append("h1 { color: white; }\n");
+            html.append(".container { max-width: 800px; margin: 0 auto; background-color: rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }\n");
+            html.append(".stat-box { background-color: rgba(255, 255, 255, 0.2); border-radius: 5px; padding: 15px; margin-bottom: 15px; }\n");
+            html.append(".user-list { background-color: white; color: #40486c; border-radius: 5px; padding: 10px; max-height: 300px; overflow-y: auto; }\n");
+            html.append(".user-item { padding: 5px 10px; border-bottom: 1px solid #eee; }\n");
+            html.append(".user-item:last-child { border-bottom: none; }\n");
+            html.append(".status-indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }\n");
+            html.append(".status-running { background-color: #4CAF50; }\n"); // Green for running
+            html.append(".status-stopped { background-color: #F44336; }\n"); // Red for stopped
+            html.append("</style>\n");
+            html.append("</head>\n");
+            html.append("<body>\n");
+            html.append("<div class=\"container\">\n");
+            html.append("<h1>Chat Server Statistics</h1>\n");
+            
+            // Server status
+            html.append("<div class=\"stat-box\">\n");
+            html.append("<h2>Server Status</h2>\n");
+            
+            // Status with colored indicator
+            html.append("<p>");
+            if (running) {
+                html.append("<span class=\"status-indicator status-running\"></span>Status: Running");
+            } else {
+                html.append("<span class=\"status-indicator status-stopped\"></span>Status: Stopped");
+            }
+            html.append("</p>\n");
+            
+            html.append("<p>Server started on port: ").append(port).append("</p>\n");
+            html.append("<p>Current time: ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append("</p>\n");
+            
+            // Calculate and display uptime if we track server start time
+            if (serverStartTime != null) {
+                Duration uptime = Duration.between(serverStartTime, LocalDateTime.now());
+                long days = uptime.toDays();
+                long hours = uptime.toHoursPart();
+                long minutes = uptime.toMinutesPart();
+                long seconds = uptime.toSecondsPart();
+                html.append("<p>Uptime: ");
+                if (days > 0) html.append(days).append(" days, ");
+                html.append(String.format("%02d:%02d:%02d", hours, minutes, seconds)).append("</p>\n");
+            }
+            
+            html.append("</div>\n");
+            
+            // User statistics
+            html.append("<div class=\"stat-box\">\n");
+            html.append("<h2>User Statistics</h2>\n");
+            html.append("<p>Users online: ").append(getOnlineUserCount()).append("</p>\n");
+            
+            // Display total messages if we track them
+            html.append("<p>Total messages sent: ").append(messageLog.size()).append("</p>\n");
+            
+            html.append("<h3>Connected Users:</h3>\n");
+            html.append("<div class=\"user-list\">\n");
+            List<String> usernames = getUsernames();
+            if (usernames.isEmpty()) {
+                html.append("<div class=\"user-item\">No users connected</div>\n");
+            } else {
+                for (String username : usernames) {
+                    html.append("<div class=\"user-item\">").append(username).append("</div>\n");
+                }
+            }
+            html.append("</div>\n");
+            html.append("</div>\n");
+            
+            // Banned words
+            html.append("<div class=\"stat-box\">\n");
+            html.append("<h2>Banned Words</h2>\n");
+            html.append("<div class=\"user-list\">\n");
+            Set<String> banned = getBannedWords();
+            if (banned.isEmpty()) {
+                html.append("<div class=\"user-item\">No banned words</div>\n");
+            } else {
+                for (String word : banned) {
+                    html.append("<div class=\"user-item\">").append(word).append("</div>\n");
+                }
+            }
+            html.append("</div>\n");
+            html.append("</div>\n");
+            
+            html.append("</div>\n"); // Close container
+            html.append("</body>\n");
+            html.append("</html>\n");
+            
+            return html.toString();
+        }
+    }
+    
+    public String getStatsUrl() {
+        return "http://localhost:" + httpPort + "/stats";
     }
 }
