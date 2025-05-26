@@ -65,8 +65,7 @@ public class ChatServer {
                 String fileName = parts[1];
                 String base64FileData = parts[2]; // This is the Base64 encoded file data
 
-                // Store the file data on the server temporarily, keyed by filename (consider a more robust key)
-                // For simplicity, we'll use filename. In a real app, manage this carefully to avoid conflicts and memory issues.
+                // Store the file data on the server temporarily
                 sharedFilesData.put(fileName, base64FileData);
 
                 String notificationMessage = sender.getUsername() + " [FILE_SHARED:" + fileName + "]";
@@ -75,7 +74,10 @@ public class ChatServer {
                 logMessage(sender.getUsername() + " shared file: " + fileName);
 
                 for (ClientHandler client : clients) {
-                    client.sendMessage(notificationMessage);
+                    // Only send the notification to other clients, not the original sender
+                    if (client != sender) {
+                        client.sendMessage(notificationMessage);
+                    }
                 }
                 return;
             }

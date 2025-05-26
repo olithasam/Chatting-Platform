@@ -6,6 +6,8 @@ import java.io.*;
 import java.net.*;
 import java.nio.file.*;
 import java.util.Base64;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.text.*;
@@ -26,9 +28,11 @@ public class ChatClient {
     // Add a pattern to identify file links in the chat area
     private static final Pattern FILE_LINK_PATTERN = Pattern.compile("(\\S+) shared a file: (.*?) \\(Click to download\\)");
     private static final Pattern MY_FILE_LINK_PATTERN = Pattern.compile("\\[You\\] shared a file: (.*?) \\(Click to download\\)");
-    private static final Pattern IMAGE_DATA_PATTERN = Pattern.compile("(\\S+) \\[IMAGE_DATA:(.*?):(.*)\\]");
+    private static final Pattern IMAGE_DATA_PATTERN = Pattern.compile("(\\S+) \\[IMAGE_DATA:(.*?):(.*?)\\]");
     private static final Pattern FILE_SHARED_PATTERN = Pattern.compile("(\\S+) \\[FILE_SHARED:(.*?)\\]");
-
+    // Add a map to store shared file data temporarily
+    private final Map<String, String> sharedFilesData = new ConcurrentHashMap<>();
+    
     public ChatClient(String serverAddress, int port) {
         initializeGUI();
         connectToServer(serverAddress, port);
@@ -82,16 +86,29 @@ public class ChatClient {
                         String sender = fileSharedMatcher.group(1);
                         String fileName = fileSharedMatcher.group(2);
                         
-                        // Display a generic file shared message with a download link
-                        displaySharedFile(sender, fileName);
+                        // Check if it's an image file and handle accordingly
+                        if (isImageFile(fileName) && sharedFilesData.containsKey(fileName)) {
 
+                            // For image files, display the image directly
+                            String base64ImageData = sharedFilesData.get(fileName);
+                            displayImageWithDownloadOption(sender, fileName, base64ImageData);
+                        } else {
+                            // Display a generic file shared message with a download link
+                            displaySharedFile(sender, fileName);
+                        }
                     } else if (finalMessage.startsWith("[FILEDATA:")) {
                         try {
                             String[] parts = finalMessage.substring(10, finalMessage.length() -1).split(":", 2); // Adjusted to remove trailing ']' if present
                             if (parts.length == 2) {
                                 String fileName = parts[0];
                                 String base64Data = parts[1];
-                                saveFile(fileName, base64Data);
+                                
+                                // If it's an image file, display it
+                                if (isImageFile(fileName)) {
+                                    displayImageWithDownloadOption("[System]", fileName, base64Data);
+                                } else {
+                                    saveFile(fileName, base64Data);
+                                }
                             } else {
                                 appendToChat("[System] Received corrupted file data format.\n", null);
                             }
@@ -410,9 +427,19 @@ public class ChatClient {
                 String encodedFile = Base64.getEncoder().encodeToString(fileBytes);
                 String fileName = file.getName();
                 
+                // Store image data locally if it's an image
+                if (isImageFile(fileName)) {
+                    sharedFilesData.put(fileName, encodedFile);
+                }
+                
                 out.println("/file " + fileName + " " + encodedFile);
                 
-                appendToChat("[You] shared file: " + fileName + "\n", null);
+                // If it's an image, display it immediately for the sender
+                if (isImageFile(fileName)) {
+                    displayImageWithDownloadOption("[You]", fileName, encodedFile);
+                } else {
+                    appendToChat("[You] shared file: " + fileName + "\n", null);
+                }
                 chatArea.setCaretPosition(chatArea.getDocument().getLength());
 
             } catch (IOException e) {
@@ -489,11 +516,7 @@ public class ChatClient {
         chatArea.setCaretPosition(chatArea.getDocument().getLength());
     }
 
-    // Placeholder for makeFileClickable, as primary logic is in MouseListener
-    private void makeFileClickable(String fileName) {
-        // This method is called when a file message is appended.
-        // The actual click handling is done by the MouseListener on chatArea.
-    }
+    
     
     private void disconnect() {
         running = false;

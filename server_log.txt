@@ -181,3 +181,47 @@
 2025-05-26 01:27:12 - oli downloaded file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
 2025-05-26 01:27:18 - oli: /quit
 2025-05-26 01:27:18 - User disconnected: oli
+2025-05-26 12:34:50 - Server started on port 9000
+2025-05-26 12:35:00 - User connected: oli
+2025-05-26 12:35:03 - oli: hello
+2025-05-26 12:35:10 - oli shared file: Pic_20241207_232632_1920x1080.jpeg
+2025-05-26 12:35:15 - oli downloaded file: Pic_20241207_232632_1920x1080.jpeg
+2025-05-26 12:35:36 - oli shared file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-26 12:35:42 - oli downloaded file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-26 22:35:24 - Server started on port 9000
+2025-05-26 22:35:35 - User connected: oli
+2025-05-26 22:35:46 - oli: hi
+2025-05-26 22:36:34 - oli shared file: Pic_20241207_232632_1920x1080.jpeg
+2025-05-26 22:36:45 - oli shared file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-26 22:46:21 - oli: /quit
+2025-05-26 22:46:21 - User disconnected: oli
+2025-05-26 22:46:32 - User connected: olitha
+2025-05-26 22:46:37 - olitha: hi
+2025-05-26 22:46:45 - olitha shared file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-26 22:46:51 - olitha shared file: Pic_20241207_232632_1920x1080.jpeg
+2025-05-26 22:47:08 - olitha: /quit
+2025-05-26 22:47:08 - User disconnected: olitha
+2025-05-26 22:52:36 - User connected: olitha
+2025-05-26 22:52:38 - olitha: hi
+2025-05-26 22:52:44 - olitha shared file: Pic_20241207_232632_1920x1080.jpeg
+2025-05-26 22:56:14 - User connected: suub
+2025-05-26 22:56:22 - suub: hi
+2025-05-26 22:56:39 - User connected: sulaj
+2025-05-26 22:56:46 - sulaj: joo
+2025-05-26 22:58:35 - User disconnected: sulaj
+2025-05-26 22:58:42 - User disconnected: suub
+2025-05-26 22:59:01 - olitha: /quit
+2025-05-26 22:59:01 - User disconnected: olitha
+2025-05-26 22:59:05 - User connected: oliii
+2025-05-26 22:59:20 - oliii: hey
+2025-05-26 22:59:28 - oliii shared file: Pic_20241207_232648_1920x1080.jpeg
+2025-05-26 22:59:30 - oliii: /quit
+2025-05-26 22:59:30 - User disconnected: oliii
+2025-05-26 22:59:37 - Server started on port 9000
+2025-05-26 22:59:51 - User connected: olii
+2025-05-26 22:59:54 - olii: hi
+2025-05-26 23:00:04 - olii shared file: Pic_20241207_232632_1920x1080.jpeg
+2025-05-26 23:00:17 - User connected: suub
+2025-05-26 23:00:22 - suub: heyyy
+2025-05-26 23:00:40 - suub shared file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-26 23:00:50 - olii downloaded file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
