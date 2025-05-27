@@ -97,17 +97,27 @@ public class ChatServer {
                 // Store the file data on the server temporarily
                 sharedFilesData.put(fileName, base64FileData);
 
-                String notificationMessage = sender.getUsername() + " [FILE_SHARED:" + fileName + "]";
+                // Check if it's an image file
+                if (isImageFile(fileName)) {
+                    // For images, send the actual image data to all clients
+                    for (ClientHandler client : clients) {
+                        if (client != sender) {
+                            // Send image data directly to other clients
+                            client.sendMessage(sender.getUsername() + " [IMAGE_DATA:" + fileName + ":" + base64FileData + "]");
+                        }
+                    }
+                } else {
+                    // For non-image files, just send the notification
+                    String notificationMessage = sender.getUsername() + " [FILE_SHARED:" + fileName + "]";                
+                    for (ClientHandler client : clients) {
+                        if (client != sender) {
+                            client.sendMessage(notificationMessage);
+                        }
+                    }
+                }
 
                 messageLog.add(sender.getUsername() + " shared file: " + fileName);
                 logMessage(sender.getUsername() + " shared file: " + fileName);
-
-                for (ClientHandler client : clients) {
-                    // Only send the notification to other clients, not the original sender
-                    if (client != sender) {
-                        client.sendMessage(notificationMessage);
-                    }
-                }
                 return;
             }
         } else if (message.startsWith("/download ")) { // Generic download request

@@ -195,12 +195,6 @@ public class ChatClient {
                                 }
                             }
                         }
-
-                        // Check if it's a general file download link
-                        // We need a way to associate the clicked text with the filename.
-                        // The text might be "Download fileName.docx" or similar.
-                        // Let's refine how we create these links and parse them.
-                        // For now, let's assume the link text is exactly "Download actualFileName.ext"
                         
                         // Attempt to find the filename from the line text if it's a file share notification
                         int lineNum = doc.getDefaultRootElement().getElementIndex(offset);
@@ -213,9 +207,7 @@ public class ChatClient {
                         // We need to make the "(Download)" part specifically clickable and associated with "document.docx"
                         // For simplicity, if the clicked text itself is a download instruction from displaySharedFile:
                         if (StyleConstants.isUnderline(element.getAttributes()) && StyleConstants.getForeground(element.getAttributes()).equals(Color.BLUE)) {
-                            // This is a clickable link we created. We need the filename.
-                            // The clickedText might be just "Download" or "Download fileName.ext"
-                            // We need to robustly get the filename associated with this click.
+                            
                             // One way: store filename in an attribute of the styled text.
                             Object fileNameAttr = element.getAttributes().getAttribute("fileName");
                             if (fileNameAttr instanceof String) {
@@ -405,14 +397,14 @@ public class ChatClient {
                 return name.endsWith(".jpg") || name.endsWith(".jpeg") || 
                        name.endsWith(".png") || name.endsWith(".gif") || 
                        name.endsWith(".pdf") || name.endsWith(".txt") || 
-                       name.endsWith(".doc") || name.endsWith(".docx") || // Word documents
-                       name.endsWith(".xls") || name.endsWith(".xlsx") || // Excel documents
-                       name.endsWith(".ppt") || name.endsWith(".pptx") || // PowerPoint documents
-                       name.endsWith(".java") || // Java files
-                       name.endsWith(".py") ||   // Python files
-                       name.endsWith(".zip") ||   // ZIP archives
-                       name.endsWith(".rar") ||   // RAR archives
-                       name.endsWith(".7z");    // 7z archives
+                       name.endsWith(".doc") || name.endsWith(".docx") || 
+                       name.endsWith(".xls") || name.endsWith(".xlsx") || 
+                       name.endsWith(".ppt") || name.endsWith(".pptx") || 
+                       name.endsWith(".java") ||
+                       name.endsWith(".py") ||  
+                       name.endsWith(".zip") ||   
+                       name.endsWith(".rar") ||   
+                       name.endsWith(".7z");    
             }
             public String getDescription() {
                 return "Supported Files (Images, Docs, Code, Archives)";
@@ -438,7 +430,8 @@ public class ChatClient {
                 if (isImageFile(fileName)) {
                     displayImageWithDownloadOption("[You]", fileName, encodedFile);
                 } else {
-                    appendToChat("[You] shared file: " + fileName + "\n", null);
+                    // Change this line to use displaySharedFile instead of appendToChat
+                    displaySharedFile("[You]", fileName);
                 }
                 chatArea.setCaretPosition(chatArea.getDocument().getLength());
 

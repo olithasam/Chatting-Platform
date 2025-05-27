@@ -1,16 +1,11 @@
-2025-05-26 23:17:42 - Server started on port 9000
-2025-05-26 23:17:55 - User connected: cs
-2025-05-26 23:17:57 - cs: hii
-2025-05-26 23:42:54 - User disconnected: cs
-2025-05-26 23:43:03 - User connected: hi
-2025-05-26 23:43:13 - Server started on port 9000
-2025-05-26 23:43:13 - HTTP server for stats page started on port 8080
-2025-05-26 23:48:49 - Server started on port 9000
-2025-05-26 23:48:49 - HTTP server for stats page started on port 8080
-2025-05-26 23:49:05 - User connected: dhskda
-2025-05-26 23:53:38 - User connected: bihaBKJDSL
-2025-05-26 23:54:01 - User connected: AGTDWYCIOJPK
-2025-05-27 00:01:26 - Server started on port 9000
-2025-05-27 00:01:26 - HTTP server for stats page started on port 8080
-2025-05-27 00:01:36 - User connected: dfghj
-2025-05-27 00:02:14 - dfghj: hi bro
+2025-05-27 23:22:12 - Server started on port 9000
+2025-05-27 23:22:12 - HTTP server for stats page started on port 8080
+2025-05-27 23:22:22 - User connected: oliiii
+2025-05-27 23:23:08 - User connected: tom
+2025-05-27 23:24:04 - oliiii: hi
+2025-05-27 23:24:10 - oliiii shared file: Pic_20241207_232632_1920x1080.jpeg
+2025-05-27 23:24:16 - oliiii shared file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-27 23:24:20 - tom: /quit
+2025-05-27 23:24:20 - User disconnected: tom
+2025-05-27 23:24:21 - oliiii: /quit
+2025-05-27 23:24:21 - User disconnected: oliiii
