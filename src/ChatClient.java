@@ -127,6 +127,21 @@ public class ChatClient {
                 SwingUtilities.invokeLater(() -> {
                     appendToChat("[System] Connection to server lost\n", null);
                     frame.setTitle("Chat Client - Disconnected");
+                    
+                    // Show a message dialog informing the user that the connection was lost
+                    JOptionPane.showMessageDialog(frame, 
+                        "Connection to the server has been lost. The application will now close.", 
+                        "Connection Lost", 
+                        JOptionPane.ERROR_MESSAGE);
+                    
+                    // Close the application after a short delay
+                    Timer timer = new Timer(2000, event -> {
+                        disconnect();
+                        frame.dispose();
+                        System.exit(0);
+                    });
+                    timer.setRepeats(false);
+                    timer.start();
                 });
                 running = false;
             }
@@ -642,6 +657,38 @@ public class ChatClient {
     public static void main(String[] args) {
         String serverAddress = "localhost";
         int port = 9000;
+
+        // Ask user for port number
+        String portInput = JOptionPane.showInputDialog(
+            null,
+            "Enter server port number:",
+            "Server Port",
+            JOptionPane.QUESTION_MESSAGE
+        );
+        
+        // If user provided a port, use it
+        if (portInput != null && !portInput.trim().isEmpty()) {
+            try {
+                int userPort = Integer.parseInt(portInput.trim());
+                if (userPort > 0 && userPort <= 65535) {
+                    port = userPort;
+                } else {
+                    JOptionPane.showMessageDialog(
+                        null,
+                        "Invalid port number. Using default port 9000.",
+                        "Port Error",
+                        JOptionPane.ERROR_MESSAGE
+                    );
+                }
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(
+                    null,
+                    "Invalid port number format. Using default port 9000.",
+                    "Port Error",
+                    JOptionPane.ERROR_MESSAGE
+                );
+            }
+        }
 
         if (args.length >= 2) {
             serverAddress = args[0];

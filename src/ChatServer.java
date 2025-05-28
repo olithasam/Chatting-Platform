@@ -17,46 +17,69 @@ public class ChatServer {
     private final List<ClientHandler> clients = new CopyOnWriteArrayList<>();
     private final List<String> messageLog = new CopyOnWriteArrayList<>();
     private final int port;
-    private boolean running = false;
+    private volatile boolean running = false;  // Made volatile for thread safety
     private final String logFilePath = "server_log.txt";
     private final Set<String> bannedWords = new HashSet<>(Arrays.asList("badword1", "badword2"));
-    private final Map<String, String> sharedFilesData = new ConcurrentHashMap<>(); // To temporarily store file data
-    private HttpServer httpServer; // HTTP server for stats page
-    private final int httpPort = 8080; // Port for HTTP server
-    private LocalDateTime serverStartTime; // Move this field here
-    
+    private final Map<String, String> sharedFilesData = new ConcurrentHashMap<>();
+    private HttpServer httpServer;
+    private final int httpPort = 8080;
+    private LocalDateTime serverStartTime;
+
     public ChatServer(int port) {
         this.port = port;
     }
-    
+
+    public boolean isRunning() {
+        return running;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
     public void start() {
         try {
+            if (serverSocket != null && !serverSocket.isClosed()) {
+                serverSocket.close();
+            }
+
             serverSocket = new ServerSocket(port);
             running = true;
-            serverStartTime = LocalDateTime.now(); // Record server start time
+            serverStartTime = LocalDateTime.now();
             System.out.println("Chat server started on port " + port);
             logMessage("Server started on port " + port);
-            
-            // Start HTTP server for stats page
+
             startHttpServer();
-            
+
             while (running) {
-                Socket clientSocket = serverSocket.accept();
-                ClientHandler clientHandler = new ClientHandler(clientSocket, this);
-                clients.add(clientHandler);
-                new Thread(clientHandler).start();
-                System.out.println("New client connected: " + clientHandler.getUsername());
+                try {
+                    Socket clientSocket = serverSocket.accept();
+                    ClientHandler clientHandler = new ClientHandler(clientSocket, this);
+                    clients.add(clientHandler);
+                    new Thread(clientHandler).start();
+                    System.out.println("New client connected: " + clientHandler.getUsername());
+                } catch (SocketException e) {
+                    if (running) {
+                        System.err.println("Server socket error: " + e.getMessage());
+                    }
+                }
             }
         } catch (IOException e) {
             System.err.println("Error: " + e.getMessage());
+        } finally {
+            stop();
         }
     }
-    
+
     private void startHttpServer() {
         try {
+            if (httpServer != null) {
+                httpServer.stop(0);
+            }
+
             httpServer = HttpServer.create(new InetSocketAddress(httpPort), 0);
             httpServer.createContext("/stats", new StatsHandler());
-            httpServer.setExecutor(null); // Use the default executor
+            httpServer.setExecutor(null);
             httpServer.start();
             System.out.println("HTTP server started on port " + httpPort);
             logMessage("HTTP server for stats page started on port " + httpPort);
@@ -64,21 +87,27 @@ public class ChatServer {
             System.err.println("HTTP server error: " + e.getMessage());
         }
     }
-    
+
     public void stop() {
         running = false;
         try {
             for (ClientHandler client : clients) {
                 client.disconnect();
             }
+            clients.clear();
+
             if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
             }
+
             if (httpServer != null) {
-                httpServer.stop(0); // Stop HTTP server immediately
+                httpServer.stop(0);
             }
+
+            System.out.println("Chat server stopped");
+            logMessage("Server stopped");
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error stopping server: " + e.getMessage());
         }
     }
 
@@ -92,23 +121,18 @@ public class ChatServer {
             String[] parts = message.split(" ", 3);
             if (parts.length >= 3) {
                 String fileName = parts[1];
-                String base64FileData = parts[2]; // This is the Base64 encoded file data
+                String base64FileData = parts[2];
 
-                // Store the file data on the server temporarily
                 sharedFilesData.put(fileName, base64FileData);
 
-                // Check if it's an image file
                 if (isImageFile(fileName)) {
-                    // For images, send the actual image data to all clients
                     for (ClientHandler client : clients) {
                         if (client != sender) {
-                            // Send image data directly to other clients
                             client.sendMessage(sender.getUsername() + " [IMAGE_DATA:" + fileName + ":" + base64FileData + "]");
                         }
                     }
                 } else {
-                    // For non-image files, just send the notification
-                    String notificationMessage = sender.getUsername() + " [FILE_SHARED:" + fileName + "]";                
+                    String notificationMessage = sender.getUsername() + " [FILE_SHARED:" + fileName + "]";
                     for (ClientHandler client : clients) {
                         if (client != sender) {
                             client.sendMessage(notificationMessage);
@@ -120,14 +144,13 @@ public class ChatServer {
                 logMessage(sender.getUsername() + " shared file: " + fileName);
                 return;
             }
-        } else if (message.startsWith("/download ")) { // Generic download request
+        } else if (message.startsWith("/download ")) {
             String[] parts = message.split(" ", 2);
             if (parts.length == 2) {
                 String requestedFileName = parts[1];
                 String fileData = sharedFilesData.get(requestedFileName);
 
                 if (fileData != null) {
-                    // Send the file data directly to the requesting client
                     sender.sendMessage("[FILEDATA:" + requestedFileName + ":" + fileData + "]");
                     logMessage(sender.getUsername() + " downloaded file: " + requestedFileName);
                 } else {
@@ -138,18 +161,16 @@ public class ChatServer {
             return;
         }
 
-        // Regular message handling
         String filtered = filterMessage(message);
         String formatted = sender.getUsername() + ": " + filtered;
         messageLog.add(formatted);
         logMessage(formatted);
         for (ClientHandler client : clients) {
-            if (client != sender) { // Regular messages are not sent back to the sender
+            if (client != sender) {
                 client.sendMessage(formatted);
             }
         }
     }
-    
 
     private String filterMessage(String message) {
         for (String word : bannedWords) {
@@ -180,13 +201,11 @@ public class ChatServer {
     public static void main(String[] args) {
         int port = 9000;
         ChatServer server = new ChatServer(port);
-        new Thread(server::start).start();  // Run server on separate thread
+        new Thread(server::start).start();
 
-        // Start admin GUI
         SwingUtilities.invokeLater(() -> new AdminGUI(server));
     }
 
-    // Inner class for client handling
     static class ClientHandler implements Runnable {
         private final Socket socket;
         private final ChatServer server;
@@ -240,21 +259,21 @@ public class ChatServer {
             return username;
         }
     }
-    // Add these methods to your ChatServer class
+
     public Set<String> getBannedWords() {
         return new HashSet<>(bannedWords);
     }
-    
+
     public void addBannedWord(String word) {
         bannedWords.add(word);
         logMessage("Added banned word: " + word);
     }
-    
+
     public void removeBannedWord(String word) {
         bannedWords.remove(word);
         logMessage("Removed banned word: " + word);
     }
-    
+
     public List<String> getUsernames() {
         List<String> usernames = new ArrayList<>();
         for (ClientHandler client : clients) {
@@ -262,19 +281,7 @@ public class ChatServer {
         }
         return usernames;
     }
-    
-   
 
-    // Helper method to determine file type from extension
-    private String getFileType(String fileName) {
-        int dotIndex = fileName.lastIndexOf('.');
-        if (dotIndex > 0) {
-            return fileName.substring(dotIndex + 1);
-        }
-        return "file";
-    }
-
-    // Handler for the stats page
     class StatsHandler implements HttpHandler {
         @Override
         public void handle(HttpExchange exchange) throws IOException {
@@ -285,14 +292,14 @@ public class ChatServer {
                 os.write(response.getBytes());
             }
         }
-        
+
         private String generateStatsHtml() {
             StringBuilder html = new StringBuilder();
             html.append("<!DOCTYPE html>\n");
             html.append("<html>\n");
             html.append("<head>\n");
             html.append("<title>Chat Server Statistics</title>\n");
-            html.append("<meta http-equiv=\"refresh\" content=\"5\">\n"); // Auto-refresh every 5 seconds
+            html.append("<meta http-equiv=\"refresh\" content=\"5\">\n");
             html.append("<style>\n");
             html.append("body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(to bottom right, #40486c, #859398); color: white; margin: 0; padding: 20px; }\n");
             html.append("h1 { color: white; }\n");
@@ -302,19 +309,17 @@ public class ChatServer {
             html.append(".user-item { padding: 5px 10px; border-bottom: 1px solid #eee; }\n");
             html.append(".user-item:last-child { border-bottom: none; }\n");
             html.append(".status-indicator { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 8px; }\n");
-            html.append(".status-running { background-color: #4CAF50; }\n"); // Green for running
-            html.append(".status-stopped { background-color: #F44336; }\n"); // Red for stopped
+            html.append(".status-running { background-color: #4CAF50; }\n");
+            html.append(".status-stopped { background-color: #F44336; }\n");
             html.append("</style>\n");
             html.append("</head>\n");
             html.append("<body>\n");
             html.append("<div class=\"container\">\n");
             html.append("<h1>Chat Server Statistics</h1>\n");
-            
-            // Server status
+
             html.append("<div class=\"stat-box\">\n");
             html.append("<h2>Server Status</h2>\n");
-            
-            // Status with colored indicator
+
             html.append("<p>");
             if (running) {
                 html.append("<span class=\"status-indicator status-running\"></span>Status: Running");
@@ -322,11 +327,10 @@ public class ChatServer {
                 html.append("<span class=\"status-indicator status-stopped\"></span>Status: Stopped");
             }
             html.append("</p>\n");
-            
+
             html.append("<p>Server started on port: ").append(port).append("</p>\n");
             html.append("<p>Current time: ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append("</p>\n");
-            
-            // Calculate and display uptime if we track server start time
+
             if (serverStartTime != null) {
                 Duration uptime = Duration.between(serverStartTime, LocalDateTime.now());
                 long days = uptime.toDays();
@@ -337,17 +341,13 @@ public class ChatServer {
                 if (days > 0) html.append(days).append(" days, ");
                 html.append(String.format("%02d:%02d:%02d", hours, minutes, seconds)).append("</p>\n");
             }
-            
+
             html.append("</div>\n");
-            
-            // User statistics
+
             html.append("<div class=\"stat-box\">\n");
             html.append("<h2>User Statistics</h2>\n");
             html.append("<p>Users online: ").append(getOnlineUserCount()).append("</p>\n");
-            
-            // Display total messages if we track them
             html.append("<p>Total messages sent: ").append(messageLog.size()).append("</p>\n");
-            
             html.append("<h3>Connected Users:</h3>\n");
             html.append("<div class=\"user-list\">\n");
             List<String> usernames = getUsernames();
@@ -360,8 +360,7 @@ public class ChatServer {
             }
             html.append("</div>\n");
             html.append("</div>\n");
-            
-            // Banned words
+
             html.append("<div class=\"stat-box\">\n");
             html.append("<h2>Banned Words</h2>\n");
             html.append("<div class=\"user-list\">\n");
@@ -375,15 +374,15 @@ public class ChatServer {
             }
             html.append("</div>\n");
             html.append("</div>\n");
-            
-            html.append("</div>\n"); // Close container
+
+            html.append("</div>\n");
             html.append("</body>\n");
             html.append("</html>\n");
-            
+
             return html.toString();
         }
     }
-    
+
     public String getStatsUrl() {
         return "http://localhost:" + httpPort + "/stats";
     }
