@@ -114,7 +114,7 @@ public class ChatClient {
                             }
                         } catch (Exception e) {
                             appendToChat("[System] Error processing file data: " + e.getMessage() + "\n", null);
-                            e.printStackTrace(); // For debugging
+                            e.printStackTrace(); 
                         }
                     } else if (!finalMessage.startsWith("[You]") && !finalMessage.startsWith(username + " ")) {
                         appendToChat(finalMessage + "\n", null);
@@ -217,13 +217,9 @@ public class ChatClient {
                         int lineStartOffset = lineElement.getStartOffset();
                         int lineEndOffset = lineElement.getEndOffset();
                         String lineText = doc.getText(lineStartOffset, lineEndOffset - lineStartOffset).trim();
-
-                        // Example: "User1 shared file: document.docx (Download)"
-                        // We need to make the "(Download)" part specifically clickable and associated with "document.docx"
-                        // For simplicity, if the clicked text itself is a download instruction from displaySharedFile:
                         if (StyleConstants.isUnderline(element.getAttributes()) && StyleConstants.getForeground(element.getAttributes()).equals(Color.BLUE)) {
                             
-                            // One way: store filename in an attribute of the styled text.
+                            
                             Object fileNameAttr = element.getAttributes().getAttribute("fileName");
                             if (fileNameAttr instanceof String) {
                                 String fileNameToDownload = (String) fileNameAttr;
@@ -232,13 +228,12 @@ public class ChatClient {
                                         "Confirm Download",
                                         JOptionPane.YES_NO_OPTION);
                                 if (choice == JOptionPane.YES_OPTION) {
-                                    requestFile(fileNameToDownload); // Send /download command to server
+                                    requestFile(fileNameToDownload); 
                                 }
-                                return; // Processed
+                                return; 
                             }
                         }
                         
-                        // Fallback to old pattern matching if the above doesn't catch it (e.g. for older link styles)
                         Matcher fileMatcher = FILE_LINK_PATTERN.matcher(lineText); 
                         Matcher myFileMatcher = MY_FILE_LINK_PATTERN.matcher(lineText);
                         String fileNameToDownloadOld = null;
@@ -259,7 +254,6 @@ public class ChatClient {
                         }
 
                     } catch (Exception ex) {
-                        // System.err.println("Error processing click: " + ex.getMessage());
                         ex.printStackTrace();
                     }
                 }
@@ -487,7 +481,7 @@ public class ChatClient {
     private void requestFile(String fileName) {
         if (out != null && running) {
             out.println("/download " + fileName); // Send download command to server
-            appendToChat("[System] Requesting to download " + fileName + "...\n", null);
+            
             chatArea.setCaretPosition(chatArea.getDocument().getLength());
         } else {
             appendToChat("[System] Not connected to server. Cannot download file.\n", null);
@@ -501,13 +495,13 @@ public class ChatClient {
             byte[] decodedBytes = Base64.getDecoder().decode(base64Data);
             
             JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setSelectedFile(new File(fileName)); // Suggest original filename
+            fileChooser.setSelectedFile(new File(fileName));
             if (fileChooser.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
                 Files.write(fileToSave.toPath(), decodedBytes);
                 JOptionPane.showMessageDialog(frame, "File '" + fileName + "' downloaded successfully to:\n" + fileToSave.getAbsolutePath(),
-                        "Download Complete", JOptionPane.INFORMATION_MESSAGE);
-                appendToChat("[System] File '" + fileName + "' downloaded to " + fileToSave.getAbsolutePath() + "\n", null);
+                        "Download Complete ", JOptionPane.INFORMATION_MESSAGE);
+                appendToChat("[System] File '" + fileName + "' download successfully \n", null);
             } else {
                 appendToChat("[System] Download cancelled for file: " + fileName + "\n", null);
             }
@@ -540,45 +534,14 @@ public class ChatClient {
         }
     }
 
-    private void displayImage(String sender, String fileName, String base64Data) {
-        try {
-            // Decode the Base64 image data
-            byte[] imageBytes = Base64.getDecoder().decode(base64Data);
-            ImageIcon originalIcon = new ImageIcon(imageBytes);
-            
-            // Resize image if it's too large (max width 300px)
-            int maxWidth = 300;
-            Image originalImage = originalIcon.getImage();
-            int width = originalIcon.getIconWidth();
-            int height = originalIcon.getIconHeight();
-            
-            if (width > maxWidth) {
-                float ratio = (float) maxWidth / width;
-                width = maxWidth;
-                height = (int) (height * ratio);
-                Image scaledImage = originalImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-                originalIcon = new ImageIcon(scaledImage);
-            }
-            
-            // Create a WhatsApp-like bubble for the image
-            appendToChat(sender + ":\n", null);
-            appendToChat("", originalIcon);
-            appendToChat("\n", null);
-            
-            // Store the image data for potential saving
-            originalIcon.setDescription(fileName + ":" + base64Data);
-            
-        } catch (Exception e) {
-            appendToChat("[System] Error displaying image: " + e.getMessage() + "\n", null);
-        }
-    }
+    
 
     private void displayImageWithDownloadOption(String sender, String fileName, String base64ImageData) {
         try {
             byte[] imageBytes = Base64.getDecoder().decode(base64ImageData);
             ImageIcon originalIcon = new ImageIcon(imageBytes);
 
-            // --- Image display logic (same as before) ---
+           
             int maxWidth = 300;
             Image originalImage = originalIcon.getImage();
             int imgWidth = originalIcon.getIconWidth();
@@ -590,7 +553,7 @@ public class ChatClient {
                 Image scaledImage = originalImage.getScaledInstance(imgWidth, imgHeight, Image.SCALE_SMOOTH);
                 originalIcon = new ImageIcon(scaledImage);
             }
-            // --- End of image display logic ---
+            
 
             appendToChat(sender + ":\n", null);
             appendToChat("", originalIcon); // Display the image
@@ -604,10 +567,8 @@ public class ChatClient {
             StyledDocument doc = chatArea.getStyledDocument();
             try {
                 doc.insertString(doc.getLength(), "Download " + fileName, attrs);
-                // Add a special marker or use a different way to identify this link if needed
-                // For simplicity, we'll rely on the MouseListener to check text content.
                 doc.insertString(doc.getLength(), "\n", null);
-            } catch (BadLocationException e) { /* handle exception */ }
+            } catch (BadLocationException e) {  }
 
             // Store the image data with the icon or in a map if needed for the click listener
             originalIcon.setDescription(fileName + ":" + base64ImageData); // Storing data in description
@@ -619,9 +580,6 @@ public class ChatClient {
 
     // Helper method to find an icon (simplified)
     private Icon findIconForDownload(String fileName) {
-        // This is a placeholder. A robust implementation would be needed here.
-        // For example, you could iterate JTextPane's content elements or maintain a map.
-        // Let's assume the last displayed icon with a matching description is the one.
         StyledDocument doc = chatArea.getStyledDocument();
         for (int i = 0; i < doc.getLength(); i++) {
             Element charElement = doc.getCharacterElement(i);
@@ -644,7 +602,7 @@ public class ChatClient {
                 // Insert the image
                 Style style = chatArea.addStyle("ImageStyle", null);
                 StyleConstants.setIcon(style, icon);
-                doc.insertString(doc.getLength(), "I", style); // "I" is a placeholder for the image
+                doc.insertString(doc.getLength(), "I", style); 
             } else {
                 // Insert text
                 doc.insertString(doc.getLength(), text, null);
@@ -666,7 +624,7 @@ public class ChatClient {
             JOptionPane.QUESTION_MESSAGE
         );
         
-        // If user provided a port, use it
+       
         if (portInput != null && !portInput.trim().isEmpty()) {
             try {
                 int userPort = Integer.parseInt(portInput.trim());

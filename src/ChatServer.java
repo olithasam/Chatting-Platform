@@ -316,7 +316,6 @@ public class ChatServer {
             html.append("<body>\n");
             html.append("<div class=\"container\">\n");
             html.append("<h1>Chat Server Statistics</h1>\n");
-
             html.append("<div class=\"stat-box\">\n");
             html.append("<h2>Server Status</h2>\n");
 
@@ -343,7 +342,6 @@ public class ChatServer {
             }
 
             html.append("</div>\n");
-
             html.append("<div class=\"stat-box\">\n");
             html.append("<h2>User Statistics</h2>\n");
             html.append("<p>Users online: ").append(getOnlineUserCount()).append("</p>\n");
@@ -360,7 +358,6 @@ public class ChatServer {
             }
             html.append("</div>\n");
             html.append("</div>\n");
-
             html.append("<div class=\"stat-box\">\n");
             html.append("<h2>Banned Words</h2>\n");
             html.append("<div class=\"user-list\">\n");
@@ -374,7 +371,6 @@ public class ChatServer {
             }
             html.append("</div>\n");
             html.append("</div>\n");
-
             html.append("</div>\n");
             html.append("</body>\n");
             html.append("</html>\n");

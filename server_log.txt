@@ -9,3 +9,109 @@
 2025-05-27 23:24:20 - User disconnected: tom
 2025-05-27 23:24:21 - oliiii: /quit
 2025-05-27 23:24:21 - User disconnected: oliiii
+2025-05-28 22:28:57 - Server started on port 9000
+2025-05-28 22:28:57 - HTTP server for stats page started on port 8080
+2025-05-28 22:29:53 - Server started on port 9000
+2025-05-28 22:29:53 - HTTP server for stats page started on port 8080
+2025-05-28 22:30:37 - User connected: olitha
+2025-05-28 22:30:39 - olitha: /quit
+2025-05-28 22:30:39 - User disconnected: olitha
+2025-05-28 22:31:21 - User connected: oliotha
+2025-05-28 22:33:41 - User connected: kghg
+2025-05-28 22:33:58 - oliotha: hii
+2025-05-28 22:34:02 - kghg: hey
+2025-05-28 22:34:08 - oliotha shared file: Pic_20241207_232648_1920x1080.jpeg
+2025-05-28 22:36:14 - oliotha shared file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-28 22:36:21 - kghg downloaded file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-28 22:38:41 - oliotha shared file: Record_2024_04_19_17_58_40_281.mp4
+2025-05-28 22:38:51 - kghg downloaded file: Record_2024_04_19_17_58_40_281.mp4
+2025-05-28 22:48:04 - User disconnected: kghg
+2025-05-28 22:48:59 - User connected: sam
+2025-05-28 22:49:02 - sam: hfhkltgjyu
+2025-05-28 22:49:03 - sam: cfhdxh
+2025-05-28 22:54:25 - oliotha shared file: Pic_20241207_232632_1920x1080.jpeg
+2025-05-28 22:54:38 - oliotha shared file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-28 22:55:00 - User disconnected: sam
+2025-05-28 22:55:02 - User disconnected: oliotha
+2025-05-28 22:55:13 - User connected: oli
+2025-05-28 22:55:28 - User connected: saqm
+2025-05-28 22:55:30 - saqm: jh
+2025-05-28 22:55:47 - oli shared file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-28 22:55:54 - saqm downloaded file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-28 22:58:30 - User disconnected: saqm
+2025-05-28 22:58:32 - User disconnected: oli
+2025-05-28 22:58:44 - User connected: oli
+2025-05-28 22:58:49 - oli shared file: Pic_20241207_232632_1920x1080.jpeg
+2025-05-28 22:59:09 - oli shared file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-28 22:59:12 - oli downloaded file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-28 23:02:48 - oli shared file: Pic_20241207_232632_1920x1080.jpeg
+2025-05-28 23:03:45 - Server stopped
+2025-05-28 23:04:20 - User connected: kjhdfg
+2025-05-28 23:04:22 - kjhdfg: hi
+2025-05-28 23:04:34 - kjhdfg shared file: Pic_20241207_232648_1920x1080.jpeg
+2025-05-28 23:15:20 - oli: /quit
+2025-05-28 23:15:20 - User disconnected: oli
+2025-05-28 23:16:47 - kjhdfg: /quit
+2025-05-28 23:16:47 - User disconnected: kjhdfg
+2025-05-28 23:17:16 - Server started on port 9000
+2025-05-28 23:17:16 - HTTP server for stats page started on port 8080
+2025-05-28 23:17:48 - User connected: oli
+2025-05-28 23:18:08 - User connected: pko
+2025-05-28 23:18:19 - pko: hi
+2025-05-28 23:18:23 - oli: hi
+2025-05-28 23:18:27 - pko: moko wenne
+2025-05-28 23:18:31 - oli: innawa
+2025-05-28 23:18:45 - pko shared file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-28 23:18:50 - pko downloaded file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-28 23:19:10 - oli downloaded file: COM5015M_Programming_04_Assignment_Brief.v3[1].docx
+2025-05-28 23:19:39 - pko shared file: Pic_20241207_232703_1920x1080.jpeg
+2025-05-28 23:22:24 - pko shared file: Screenshot
+2025-05-28 23:23:27 - pko shared file: jtjututuutyututu.png
+2025-05-28 23:24:29 - pko shared file: ppppp.png
+2025-05-28 23:27:11 - pko shared file: book2.xlsx
+2025-05-28 23:27:16 - pko downloaded file: book2.xlsx
+2025-05-28 23:28:00 - pko shared file: Main.java
+2025-05-28 23:28:11 - pko downloaded file: Main.java
+2025-05-28 23:28:19 - oli downloaded file: Main.java
+2025-05-28 23:32:05 - pko shared file: W2052883_20230111-Olitha-
+2025-05-28 23:32:18 - File not found for download request from pko: W2052883_20230111-Olitha- SDGP-SE-13-CW1Individual.pdf
+2025-05-28 23:32:29 - oli downloaded file: W2052883_20230111-Olitha-
+2025-05-28 23:32:35 - oli: /quit
+2025-05-28 23:32:35 - User disconnected: oli
+2025-05-28 23:32:36 - pko: /quit
+2025-05-28 23:32:36 - User disconnected: pko
+2025-05-28 23:32:50 - User connected: oli
+2025-05-28 23:33:05 - User connected: lkjdhnfg
+2025-05-28 23:33:15 - lkjdhnfg: hi
+2025-05-28 23:33:18 - oli: fghj
+2025-05-28 23:33:31 - lkjdhnfg: ****
+2025-05-28 23:33:47 - lkjdhnfg shared file: w2052736_20220955_Wathila_Karunathilake
+2025-05-28 23:33:50 - File not found for download request from lkjdhnfg: w2052736_20220955_Wathila_Karunathilake - SE-13-CW 1 Group.pdf
+2025-05-28 23:34:01 - oli downloaded file: w2052736_20220955_Wathila_Karunathilake
+2025-05-28 23:34:30 - lkjdhnfg shared file: w2052883_20230111-report.pdf
+2025-05-28 23:34:32 - lkjdhnfg downloaded file: w2052883_20230111-report.pdf
+2025-05-28 23:34:43 - oli downloaded file: w2052883_20230111-report.pdf
+2025-05-28 23:36:36 - User disconnected: oli
+2025-05-28 23:36:36 - User disconnected: oli
+2025-05-28 23:36:36 - User disconnected: lkjdhnfg
+2025-05-28 23:36:36 - User disconnected: lkjdhnfg
+2025-05-28 23:36:36 - Server stopped
+2025-05-28 23:36:36 - Server stopped
+2025-05-28 23:36:57 - Server stopped
+2025-05-28 23:36:57 - Server started on port 9004
+2025-05-28 23:36:57 - HTTP server for stats page started on port 8080
+2025-05-28 23:37:35 - User connected: popa
+2025-05-28 23:37:51 - User connected: hgcghc
+2025-05-28 23:37:59 - popa: fdgh
+2025-05-28 23:38:02 - hgcghc: dfg
+2025-05-28 23:40:34 - User disconnected: hgcghc
+2025-05-28 23:40:35 - User disconnected: popa
+2025-05-28 23:45:13 - Server started on port 9000
+2025-05-28 23:45:13 - HTTP server for stats page started on port 8080
+2025-05-28 23:45:31 - User connected: oli
+2025-05-28 23:45:46 - User connected: hyttg
+2025-05-28 23:45:54 - oli: wrtuy
+2025-05-28 23:45:57 - hyttg: xcv
+2025-05-28 23:46:04 - oli shared file: jtjututuutyututu.png
+2025-05-28 23:46:13 - oli shared file: Pic_20241207_232632_1920x1080.jpeg
+2025-05-28 23:46:39 - oli shared file: ppppp.png
