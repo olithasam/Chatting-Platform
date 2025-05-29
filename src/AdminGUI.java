@@ -30,7 +30,7 @@ public class AdminGUI extends JFrame {
         setSize(700, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        //Create main panel with gradient background
+        //Main panel
         mainPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -47,39 +47,39 @@ public class AdminGUI extends JFrame {
         mainPanel.setLayout(new BorderLayout(10, 10));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
 
-        // Create header panel
+        //Create a header panel
         JPanel headerPanel = createHeaderPanel();
 
-        // Create server control panel
+        //Create server control panel
         JPanel serverControlPanel = createServerControlPanel();
 
-        // Create content panel with left and right sections
+        //Create content panel with left and right sections
         JPanel contentPanel = new JPanel(new BorderLayout(10, 10));
         contentPanel.setOpaque(false);
 
-        // Create stats panel
+        //Create stats panel
         statsPanel = createStatsPanel();
 
-        // Create left panel with users list
+        //Create left panel with users list
         JPanel leftPanel = createUsersPanel();
 
-        // Create right panel with vertically stacked buttons
+        //Create right panel with vertically stacked buttons
         JPanel rightPanel = createButtonsPanel();
 
-        // Add panels to content
+        //Add panels to content
         contentPanel.add(statsPanel, BorderLayout.NORTH);
         contentPanel.add(leftPanel, BorderLayout.CENTER);
         contentPanel.add(rightPanel, BorderLayout.EAST);
 
-        // Add panels to main panel
+        //Add panels to main panel
         mainPanel.add(headerPanel, BorderLayout.NORTH);
         mainPanel.add(serverControlPanel, BorderLayout.SOUTH);
         mainPanel.add(contentPanel, BorderLayout.CENTER);
 
-        // Add main panel to frame
+        //Add main panel to frame
         add(mainPanel);
 
-        // Timer to refresh user count and list every 5 seconds
+        //Timer to refresh user count and list for every 5 seconds
         new Timer(5000, e -> refreshUserData()).start();
 
         setLocationRelativeTo(null);

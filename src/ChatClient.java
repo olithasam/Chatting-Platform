@@ -25,12 +25,14 @@ public class ChatClient {
     private BufferedReader in;
     private String username;
     private boolean running = false;
-    // Add a pattern to identify file links in the chat area
+
+    //Add a pattern to identify file links in the chat area
     private static final Pattern FILE_LINK_PATTERN = Pattern.compile("(\\S+) shared a file: (.*?) \\(Click to download\\)");
     private static final Pattern MY_FILE_LINK_PATTERN = Pattern.compile("\\[You\\] shared a file: (.*?) \\(Click to download\\)");
     private static final Pattern IMAGE_DATA_PATTERN = Pattern.compile("(\\S+) \\[IMAGE_DATA:(.*?):(.*?)\\]");
     private static final Pattern FILE_SHARED_PATTERN = Pattern.compile("(\\S+) \\[FILE_SHARED:(.*?)\\]");
-    // Add a map to store shared file data temporarily
+
+    //Add a map to store shared file data temporarily
     private final Map<String, String> sharedFilesData = new ConcurrentHashMap<>();
     
     public ChatClient(String serverAddress, int port) {
@@ -76,24 +78,24 @@ public class ChatClient {
                     Matcher imageDataMatcher = IMAGE_DATA_PATTERN.matcher(finalMessage);
                     Matcher fileSharedMatcher = FILE_SHARED_PATTERN.matcher(finalMessage);
 
-                    if (imageDataMatcher.matches()) { // This pattern might now be part of FILE_SHARED if server logic changed
+                    if (imageDataMatcher.matches()) {
                         String sender = imageDataMatcher.group(1);
                         String fileName = imageDataMatcher.group(2);
                         String base64ImageData = imageDataMatcher.group(3);
-                        // If server sends IMAGE_DATA for images, handle it
+                        //If server sends IMAGE_DATA for images, handle it
                         displayImageWithDownloadOption(sender, fileName, base64ImageData);
                     } else if (fileSharedMatcher.matches()) {
                         String sender = fileSharedMatcher.group(1);
                         String fileName = fileSharedMatcher.group(2);
                         
-                        // Check if it's an image file and handle accordingly
+                        //Check if its an image file and handle accordingly
                         if (isImageFile(fileName) && sharedFilesData.containsKey(fileName)) {
 
-                            // For image files, display the image directly
+                            //For image files, display the image directly
                             String base64ImageData = sharedFilesData.get(fileName);
                             displayImageWithDownloadOption(sender, fileName, base64ImageData);
                         } else {
-                            // Display a generic file shared message with a download link
+                            //Display a generic file shared message with a download link
                             displaySharedFile(sender, fileName);
                         }
                     } else if (finalMessage.startsWith("[FILEDATA:")) {
@@ -128,13 +130,13 @@ public class ChatClient {
                     appendToChat("[System] Connection to server lost\n", null);
                     frame.setTitle("Chat Client - Disconnected");
                     
-                    // Show a message dialog informing the user that the connection was lost
+                    //Show a message dialog informing the user that the connection was lost
                     JOptionPane.showMessageDialog(frame, 
                         "Connection to the server has been lost. The application will now close.", 
                         "Connection Lost", 
                         JOptionPane.ERROR_MESSAGE);
                     
-                    // Close the application after a short delay
+                    //Close the application after a short delay
                     Timer timer = new Timer(2000, event -> {
                         disconnect();
                         frame.dispose();
@@ -154,11 +156,11 @@ public class ChatClient {
     }
 
     private void createAndShowGUI() {
-        // Create main frame
+        //Create main frame
         frame = new JFrame("Chat Client");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
-        // Create main panel with gradient background
+        //Main panel
         mainPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -175,14 +177,14 @@ public class ChatClient {
         mainPanel.setLayout(new BorderLayout(10, 10));
         mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Chat area with custom styling
+        //Chat area
         chatArea = new JTextPane();
         chatArea.setEditable(false);
         chatArea.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         chatArea.setBackground(new Color(248, 250, 252));
         chatArea.setForeground(new Color(30, 41, 59));
 
-        // Add MouseListener to chatArea for handling file link clicks
+        //MouseListener to chatArea for handling file link clicks
         chatArea.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -192,12 +194,12 @@ public class ChatClient {
                         StyledDocument doc = chatArea.getStyledDocument();
                         Element element = doc.getCharacterElement(offset);
                         
-                        // Get the text of the clicked segment
+                        //Get the text of the clicked segment
                         int start = element.getStartOffset();
                         int end = element.getEndOffset();
                         String clickedText = doc.getText(start, end - start).trim();
 
-                        // Check if it's a download link for an image (previously handled)
+                        //Check if it's a download link for an image (previously handled)
                         if (clickedText.startsWith("Download ")) { // For images with embedded data
                             String fileNameWithExt = clickedText.substring("Download ".length()).trim();
                             Icon icon = findIconForDownload(fileNameWithExt); 
@@ -211,7 +213,7 @@ public class ChatClient {
                             }
                         }
                         
-                        // Attempt to find the filename from the line text if it's a file share notification
+                        //Attempt to find the filename from the line text if it's a file share notification
                         int lineNum = doc.getDefaultRootElement().getElementIndex(offset);
                         Element lineElement = doc.getDefaultRootElement().getElement(lineNum);
                         int lineStartOffset = lineElement.getStartOffset();
@@ -260,18 +262,18 @@ public class ChatClient {
             }
         });
         
-        // Scrollpane for chat area
+        //Scrollpane for chat area
         JScrollPane scrollPane = new JScrollPane(chatArea);
         scrollPane.setBorder(BorderFactory.createCompoundBorder(
             new LineBorder(new Color(255, 255, 255, 100), 1),
             BorderFactory.createEmptyBorder(5, 5, 5, 5)
         ));
         
-        // Bottom panel for input
+        //Bottom panel for input
         JPanel bottomPanel = new JPanel(new BorderLayout(5, 0));
         bottomPanel.setOpaque(false);
         
-        // Message input field
+        //Message input field
         messageField = new JTextField();
         messageField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         messageField.setBorder(BorderFactory.createCompoundBorder(
@@ -279,10 +281,10 @@ public class ChatClient {
             BorderFactory.createEmptyBorder(8, 8, 8, 8)
         ));
         
-        // Keep focus in message field
+        //Keep focus in message field
         SwingUtilities.invokeLater(() -> messageField.requestFocusInWindow());
         
-        // Add focus listener to maintain focus
+        //Add focus listener to maintain focus
         frame.addWindowFocusListener(new WindowAdapter() {
             @Override
             public void windowGainedFocus(WindowEvent e) {
@@ -290,11 +292,11 @@ public class ChatClient {
             }
         });
         
-        // Add placeholder text
+        //Add placeholder text
         messageField.setText("Type your message...");
         messageField.setForeground(Color.GRAY);
         
-        // Add focus listener for placeholder behavior
+        //Add focus listener for placeholder behavior
         messageField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -314,19 +316,19 @@ public class ChatClient {
             }
         });
         
-        // Buttons panel
+        //Buttons panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
         buttonPanel.setOpaque(false);
         
-        // Send button
+        //Send button
         sendButton = new JButton("Send");
         styleButton(sendButton);
         
-        // File button
+        //File button
         fileButton = new JButton("Share File");
         styleButton(fileButton);
         
-        // Add components
+        //Add components
         buttonPanel.add(fileButton);
         buttonPanel.add(sendButton);
         bottomPanel.add(messageField, BorderLayout.CENTER);
@@ -335,7 +337,7 @@ public class ChatClient {
         mainPanel.add(scrollPane, BorderLayout.CENTER);
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
         
-        // Frame settings
+        //Frame settings
         frame.add(mainPanel);
         frame.setSize(600, 500);
         frame.setLocationRelativeTo(null);
@@ -364,16 +366,16 @@ public class ChatClient {
     }
 
     private void setupActionListeners() {
-        // Send message on button click
+        //Send message on button click
         sendButton.addActionListener(e -> sendMessage());
 
-        // Send message on Enter key
+        //Send message on Enter key
         messageField.addActionListener(e -> sendMessage());
 
-        // File sharing button
+        //File sharing button
         fileButton.addActionListener(e -> shareFile());
 
-        // Window closing handler
+        //Window closing handler
         frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -398,7 +400,7 @@ public class ChatClient {
 
     private void shareFile() {
         JFileChooser fileChooser = new JFileChooser();
-        // Add a more comprehensive file filter
+        //Add a more comprehensive file filter
         fileChooser.setFileFilter(new javax.swing.filechooser.FileFilter() {
             public boolean accept(File f) {
                 if (f.isDirectory()) return true;
@@ -428,14 +430,14 @@ public class ChatClient {
                 String encodedFile = Base64.getEncoder().encodeToString(fileBytes);
                 String fileName = file.getName();
                 
-                // Store image data locally if it's an image
+                //Store image data locally if it's an image
                 if (isImageFile(fileName)) {
                     sharedFilesData.put(fileName, encodedFile);
                 }
                 
                 out.println("/file " + fileName + " " + encodedFile);
                 
-                // If it's an image, display it immediately for the sender
+                //If its an image display it immediately for the sender
                 if (isImageFile(fileName)) {
                     displayImageWithDownloadOption("[You]", fileName, encodedFile);
                 } else {
@@ -457,13 +459,13 @@ public class ChatClient {
     private void displaySharedFile(String sender, String fileName) {
         StyledDocument doc = chatArea.getStyledDocument();
         try {
-            // Display sender and filename
+            //Display sender and filename
             SimpleAttributeSet senderAttrs = new SimpleAttributeSet();
             StyleConstants.setBold(senderAttrs, true);
             doc.insertString(doc.getLength(), sender + ": ", senderAttrs);
             doc.insertString(doc.getLength(), "Shared a file - " + fileName + " ", null);
 
-            // Add a clickable "Download" link
+            //Add a clickable "Download" link
             SimpleAttributeSet linkAttrs = new SimpleAttributeSet();
             StyleConstants.setForeground(linkAttrs, Color.BLUE);
             StyleConstants.setUnderline(linkAttrs, true);
@@ -477,7 +479,7 @@ public class ChatClient {
         }
     }
 
-    // Method to request a file from the server
+    //Method to request a file from the server
     private void requestFile(String fileName) {
         if (out != null && running) {
             out.println("/download " + fileName); // Send download command to server
@@ -489,7 +491,7 @@ public class ChatClient {
         }
     }
 
-    // Method to save the received file
+    //Method to save the received file
     private void saveFile(String fileName, String base64Data) {
         try {
             byte[] decodedBytes = Base64.getDecoder().decode(base64Data);
@@ -559,7 +561,7 @@ public class ChatClient {
             appendToChat("", originalIcon); // Display the image
             appendToChat("\n", null);
 
-            // Add a clickable "Download" link for the image
+            //Add a clickable "Download" link for the image
             SimpleAttributeSet attrs = new SimpleAttributeSet();
             StyleConstants.setForeground(attrs, Color.BLUE);
             StyleConstants.setUnderline(attrs, true);
@@ -570,7 +572,7 @@ public class ChatClient {
                 doc.insertString(doc.getLength(), "\n", null);
             } catch (BadLocationException e) {  }
 
-            // Store the image data with the icon or in a map if needed for the click listener
+            //Store the image data with the icon or in a map if needed for the click listener
             originalIcon.setDescription(fileName + ":" + base64ImageData); // Storing data in description
 
         } catch (Exception e) {
@@ -578,7 +580,7 @@ public class ChatClient {
         }
     }
 
-    // Helper method to find an icon (simplified)
+    //Helper method to find an icon (simplified)
     private Icon findIconForDownload(String fileName) {
         StyledDocument doc = chatArea.getStyledDocument();
         for (int i = 0; i < doc.getLength(); i++) {
