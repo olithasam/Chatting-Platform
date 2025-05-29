@@ -27,10 +27,10 @@ public class AdminGUI extends JFrame {
         this.serverRunning = server != null && server.isRunning(); // Check server status
 
         setTitle("Admin Control Panel");
-        setSize(500, 500);
+        setSize(700, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // Create main panel with gradient background
+        //Create main panel with gradient background
         mainPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
