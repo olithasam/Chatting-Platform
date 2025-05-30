@@ -5,7 +5,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;
 import javax.swing.*;
-
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
@@ -19,6 +18,7 @@ public class ChatServer {
     private final int port;
     private volatile boolean running = false;  // Made volatile for thread safety
     private final String logFilePath = "server_log.txt";
+    private final String encryptedLogFilePath = "encrypted_log.txt"; // New field for encrypted log
     private final Set<String> bannedWords = new HashSet<>(Arrays.asList("badword1", "badword2"));
     private final Map<String, String> sharedFilesData = new ConcurrentHashMap<>();
     private HttpServer httpServer;
@@ -186,11 +186,26 @@ public class ChatServer {
     }
 
     private void logMessage(String msg) {
+        String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        String formattedMsg = time + " - " + msg;
+
+        // Write to regular log file
         try (PrintWriter writer = new PrintWriter(new FileWriter(logFilePath, true))) {
-            String time = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            writer.println(time + " - " + msg);
+            writer.println(formattedMsg);
         } catch (IOException e) {
             System.err.println("Log error: " + e.getMessage());
+        }
+
+        // Write to encrypted log file
+        try (PrintWriter encryptedWriter = new PrintWriter(new FileWriter(encryptedLogFilePath, true))) {
+            String encryptedMsg = AESUtil.encrypt(formattedMsg);
+            if (encryptedMsg != null) {
+                encryptedWriter.println(encryptedMsg);
+            } else {
+                System.err.println("Failed to encrypt log message");
+            }
+        } catch (IOException e) {
+            System.err.println("Encrypted log error: " + e.getMessage());
         }
     }
 

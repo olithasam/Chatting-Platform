@@ -34,7 +34,7 @@ public class ChatClient {
 
     //Add a map to store shared file data temporarily
     private final Map<String, String> sharedFilesData = new ConcurrentHashMap<>();
-    
+
     public ChatClient(String serverAddress, int port) {
         initializeGUI();
         connectToServer(serverAddress, port);
@@ -87,7 +87,7 @@ public class ChatClient {
                     } else if (fileSharedMatcher.matches()) {
                         String sender = fileSharedMatcher.group(1);
                         String fileName = fileSharedMatcher.group(2);
-                        
+
                         //Check if its an image file and handle accordingly
                         if (isImageFile(fileName) && sharedFilesData.containsKey(fileName)) {
 
@@ -104,7 +104,7 @@ public class ChatClient {
                             if (parts.length == 2) {
                                 String fileName = parts[0];
                                 String base64Data = parts[1];
-                                
+
                                 // If it's an image file, display it
                                 if (isImageFile(fileName)) {
                                     displayImageWithDownloadOption("[System]", fileName, base64Data);
@@ -116,7 +116,7 @@ public class ChatClient {
                             }
                         } catch (Exception e) {
                             appendToChat("[System] Error processing file data: " + e.getMessage() + "\n", null);
-                            e.printStackTrace(); 
+                            e.printStackTrace();
                         }
                     } else if (!finalMessage.startsWith("[You]") && !finalMessage.startsWith(username + " ")) {
                         appendToChat(finalMessage + "\n", null);
@@ -129,13 +129,13 @@ public class ChatClient {
                 SwingUtilities.invokeLater(() -> {
                     appendToChat("[System] Connection to server lost\n", null);
                     frame.setTitle("Chat Client - Disconnected");
-                    
+
                     //Show a message dialog informing the user that the connection was lost
-                    JOptionPane.showMessageDialog(frame, 
-                        "Connection to the server has been lost. The application will now close.", 
-                        "Connection Lost", 
-                        JOptionPane.ERROR_MESSAGE);
-                    
+                    JOptionPane.showMessageDialog(frame,
+                            "Connection to the server has been lost. The application will now close.",
+                            "Connection Lost",
+                            JOptionPane.ERROR_MESSAGE);
+
                     //Close the application after a short delay
                     Timer timer = new Timer(2000, event -> {
                         disconnect();
@@ -159,7 +159,7 @@ public class ChatClient {
         //Create main frame
         frame = new JFrame("Chat Client");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        
+
         //Main panel
         mainPanel = new JPanel() {
             @Override
@@ -193,7 +193,7 @@ public class ChatClient {
                         int offset = chatArea.viewToModel2D(e.getPoint());
                         StyledDocument doc = chatArea.getStyledDocument();
                         Element element = doc.getCharacterElement(offset);
-                        
+
                         //Get the text of the clicked segment
                         int start = element.getStartOffset();
                         int end = element.getEndOffset();
@@ -202,7 +202,7 @@ public class ChatClient {
                         //Check if it's a download link for an image (previously handled)
                         if (clickedText.startsWith("Download ")) { // For images with embedded data
                             String fileNameWithExt = clickedText.substring("Download ".length()).trim();
-                            Icon icon = findIconForDownload(fileNameWithExt); 
+                            Icon icon = findIconForDownload(fileNameWithExt);
                             if (icon instanceof ImageIcon && ((ImageIcon)icon).getDescription() != null) {
                                 String[] parts = ((ImageIcon)icon).getDescription().split(":", 2);
                                 if (parts.length == 2 && parts[0].equals(fileNameWithExt)) {
@@ -212,7 +212,7 @@ public class ChatClient {
                                 }
                             }
                         }
-                        
+
                         //Attempt to find the filename from the line text if it's a file share notification
                         int lineNum = doc.getDefaultRootElement().getElementIndex(offset);
                         Element lineElement = doc.getDefaultRootElement().getElement(lineNum);
@@ -220,8 +220,8 @@ public class ChatClient {
                         int lineEndOffset = lineElement.getEndOffset();
                         String lineText = doc.getText(lineStartOffset, lineEndOffset - lineStartOffset).trim();
                         if (StyleConstants.isUnderline(element.getAttributes()) && StyleConstants.getForeground(element.getAttributes()).equals(Color.BLUE)) {
-                            
-                            
+
+
                             Object fileNameAttr = element.getAttributes().getAttribute("fileName");
                             if (fileNameAttr instanceof String) {
                                 String fileNameToDownload = (String) fileNameAttr;
@@ -230,13 +230,13 @@ public class ChatClient {
                                         "Confirm Download",
                                         JOptionPane.YES_NO_OPTION);
                                 if (choice == JOptionPane.YES_OPTION) {
-                                    requestFile(fileNameToDownload); 
+                                    requestFile(fileNameToDownload);
                                 }
-                                return; 
+                                return;
                             }
                         }
-                        
-                        Matcher fileMatcher = FILE_LINK_PATTERN.matcher(lineText); 
+
+                        Matcher fileMatcher = FILE_LINK_PATTERN.matcher(lineText);
                         Matcher myFileMatcher = MY_FILE_LINK_PATTERN.matcher(lineText);
                         String fileNameToDownloadOld = null;
                         if (fileMatcher.find()) {
@@ -246,10 +246,10 @@ public class ChatClient {
                         }
 
                         if (fileNameToDownloadOld != null) {
-                             int choice = JOptionPane.showConfirmDialog(frame,
-                                        "Request to download file: " + fileNameToDownloadOld + "?",
-                                        "Confirm Download Request",
-                                        JOptionPane.YES_NO_OPTION);
+                            int choice = JOptionPane.showConfirmDialog(frame,
+                                    "Request to download file: " + fileNameToDownloadOld + "?",
+                                    "Confirm Download Request",
+                                    JOptionPane.YES_NO_OPTION);
                             if (choice == JOptionPane.YES_OPTION) {
                                 requestFile(fileNameToDownloadOld);
                             }
@@ -261,29 +261,29 @@ public class ChatClient {
                 }
             }
         });
-        
+
         //Scrollpane for chat area
         JScrollPane scrollPane = new JScrollPane(chatArea);
         scrollPane.setBorder(BorderFactory.createCompoundBorder(
-            new LineBorder(new Color(255, 255, 255, 100), 1),
-            BorderFactory.createEmptyBorder(5, 5, 5, 5)
+                new LineBorder(new Color(255, 255, 255, 100), 1),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)
         ));
-        
+
         //Bottom panel for input
         JPanel bottomPanel = new JPanel(new BorderLayout(5, 0));
         bottomPanel.setOpaque(false);
-        
+
         //Message input field
         messageField = new JTextField();
         messageField.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         messageField.setBorder(BorderFactory.createCompoundBorder(
-            new LineBorder(new Color(255, 255, 255, 100), 1),
-            BorderFactory.createEmptyBorder(8, 8, 8, 8)
+                new LineBorder(new Color(255, 255, 255, 100), 1),
+                BorderFactory.createEmptyBorder(8, 8, 8, 8)
         ));
-        
+
         //Keep focus in message field
         SwingUtilities.invokeLater(() -> messageField.requestFocusInWindow());
-        
+
         //Add focus listener to maintain focus
         frame.addWindowFocusListener(new WindowAdapter() {
             @Override
@@ -291,11 +291,11 @@ public class ChatClient {
                 messageField.requestFocusInWindow();
             }
         });
-        
+
         //Add placeholder text
         messageField.setText("Type your message...");
         messageField.setForeground(Color.GRAY);
-        
+
         //Add focus listener for placeholder behavior
         messageField.addFocusListener(new FocusListener() {
             @Override
@@ -315,35 +315,35 @@ public class ChatClient {
                 }
             }
         });
-        
+
         //Buttons panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
         buttonPanel.setOpaque(false);
-        
+
         //Send button
         sendButton = new JButton("Send");
         styleButton(sendButton);
-        
+
         //File button
         fileButton = new JButton("Share File");
         styleButton(fileButton);
-        
+
         //Add components
         buttonPanel.add(fileButton);
         buttonPanel.add(sendButton);
         bottomPanel.add(messageField, BorderLayout.CENTER);
         bottomPanel.add(buttonPanel, BorderLayout.EAST);
-        
+
         mainPanel.add(scrollPane, BorderLayout.CENTER);
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
-        
+
         //Frame settings
         frame.add(mainPanel);
         frame.setSize(600, 500);
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
     }
-    
+
     private void styleButton(JButton button) {
         button.setFont(new Font("Segoe UI", Font.BOLD, 12));
         button.setForeground(Color.WHITE);
@@ -351,13 +351,13 @@ public class ChatClient {
         button.setBorder(new EmptyBorder(8, 15, 8, 15));
         button.setFocusPainted(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        
+
         button.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
                 button.setBackground(new Color(67, 56, 202));
             }
-            
+
             @Override
             public void mouseExited(MouseEvent e) {
                 button.setBackground(new Color(79, 70, 229));
@@ -405,38 +405,38 @@ public class ChatClient {
             public boolean accept(File f) {
                 if (f.isDirectory()) return true;
                 String name = f.getName().toLowerCase();
-                return name.endsWith(".jpg") || name.endsWith(".jpeg") || 
-                       name.endsWith(".png") || name.endsWith(".gif") || 
-                       name.endsWith(".pdf") || name.endsWith(".txt") || 
-                       name.endsWith(".doc") || name.endsWith(".docx") || 
-                       name.endsWith(".xls") || name.endsWith(".xlsx") || 
-                       name.endsWith(".ppt") || name.endsWith(".pptx") || 
-                       name.endsWith(".java") ||
-                       name.endsWith(".py") ||  
-                       name.endsWith(".zip") ||   
-                       name.endsWith(".rar") ||   
-                       name.endsWith(".7z");    
+                return name.endsWith(".jpg") || name.endsWith(".jpeg") ||
+                        name.endsWith(".png") || name.endsWith(".gif") ||
+                        name.endsWith(".pdf") || name.endsWith(".txt") ||
+                        name.endsWith(".doc") || name.endsWith(".docx") ||
+                        name.endsWith(".xls") || name.endsWith(".xlsx") ||
+                        name.endsWith(".ppt") || name.endsWith(".pptx") ||
+                        name.endsWith(".java") ||
+                        name.endsWith(".py") ||
+                        name.endsWith(".zip") ||
+                        name.endsWith(".rar") ||
+                        name.endsWith(".7z");
             }
             public String getDescription() {
                 return "Supported Files (Images, Docs, Code, Archives)";
             }
         });
         fileChooser.setAcceptAllFileFilterUsed(true); // Optionally allow users to select any file type
-        
+
         if (fileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
             try {
                 byte[] fileBytes = Files.readAllBytes(file.toPath());
                 String encodedFile = Base64.getEncoder().encodeToString(fileBytes);
                 String fileName = file.getName();
-                
+
                 //Store image data locally if it's an image
                 if (isImageFile(fileName)) {
                     sharedFilesData.put(fileName, encodedFile);
                 }
-                
+
                 out.println("/file " + fileName + " " + encodedFile);
-                
+
                 //If its an image display it immediately for the sender
                 if (isImageFile(fileName)) {
                     displayImageWithDownloadOption("[You]", fileName, encodedFile);
@@ -483,7 +483,7 @@ public class ChatClient {
     private void requestFile(String fileName) {
         if (out != null && running) {
             out.println("/download " + fileName); // Send download command to server
-            
+
             chatArea.setCaretPosition(chatArea.getDocument().getLength());
         } else {
             appendToChat("[System] Not connected to server. Cannot download file.\n", null);
@@ -495,7 +495,7 @@ public class ChatClient {
     private void saveFile(String fileName, String base64Data) {
         try {
             byte[] decodedBytes = Base64.getDecoder().decode(base64Data);
-            
+
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setSelectedFile(new File(fileName));
             if (fileChooser.showSaveDialog(frame) == JFileChooser.APPROVE_OPTION) {
@@ -511,7 +511,7 @@ public class ChatClient {
             JOptionPane.showMessageDialog(frame, "Error decoding file data for '" + fileName + "'. It might be corrupted.",
                     "Download Error", JOptionPane.ERROR_MESSAGE);
             appendToChat("[System] Error decoding file data for: " + fileName + "\n", null);
-        } 
+        }
         catch (IOException e) {
             JOptionPane.showMessageDialog(frame, "Error saving file '" + fileName + "': " + e.getMessage(),
                     "Download Error", JOptionPane.ERROR_MESSAGE);
@@ -520,8 +520,8 @@ public class ChatClient {
         chatArea.setCaretPosition(chatArea.getDocument().getLength());
     }
 
-    
-    
+
+
     private void disconnect() {
         running = false;
         try {
@@ -536,14 +536,14 @@ public class ChatClient {
         }
     }
 
-    
+
 
     private void displayImageWithDownloadOption(String sender, String fileName, String base64ImageData) {
         try {
             byte[] imageBytes = Base64.getDecoder().decode(base64ImageData);
             ImageIcon originalIcon = new ImageIcon(imageBytes);
 
-           
+
             int maxWidth = 300;
             Image originalImage = originalIcon.getImage();
             int imgWidth = originalIcon.getIconWidth();
@@ -555,7 +555,7 @@ public class ChatClient {
                 Image scaledImage = originalImage.getScaledInstance(imgWidth, imgHeight, Image.SCALE_SMOOTH);
                 originalIcon = new ImageIcon(scaledImage);
             }
-            
+
 
             appendToChat(sender + ":\n", null);
             appendToChat("", originalIcon); // Display the image
@@ -565,7 +565,7 @@ public class ChatClient {
             SimpleAttributeSet attrs = new SimpleAttributeSet();
             StyleConstants.setForeground(attrs, Color.BLUE);
             StyleConstants.setUnderline(attrs, true);
-            
+
             StyledDocument doc = chatArea.getStyledDocument();
             try {
                 doc.insertString(doc.getLength(), "Download " + fileName, attrs);
@@ -604,7 +604,7 @@ public class ChatClient {
                 // Insert the image
                 Style style = chatArea.addStyle("ImageStyle", null);
                 StyleConstants.setIcon(style, icon);
-                doc.insertString(doc.getLength(), "I", style); 
+                doc.insertString(doc.getLength(), "I", style);
             } else {
                 // Insert text
                 doc.insertString(doc.getLength(), text, null);
@@ -620,13 +620,13 @@ public class ChatClient {
 
         // Ask user for port number
         String portInput = JOptionPane.showInputDialog(
-            null,
-            "Enter server port number:",
-            "Server Port",
-            JOptionPane.QUESTION_MESSAGE
+                null,
+                "Enter server port number:",
+                "Server Port",
+                JOptionPane.QUESTION_MESSAGE
         );
-        
-       
+
+
         if (portInput != null && !portInput.trim().isEmpty()) {
             try {
                 int userPort = Integer.parseInt(portInput.trim());
@@ -634,18 +634,18 @@ public class ChatClient {
                     port = userPort;
                 } else {
                     JOptionPane.showMessageDialog(
-                        null,
-                        "Invalid port number. Using default port 9000.",
-                        "Port Error",
-                        JOptionPane.ERROR_MESSAGE
+                            null,
+                            "Invalid port number. Using default port 9000.",
+                            "Port Error",
+                            JOptionPane.ERROR_MESSAGE
                     );
                 }
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(
-                    null,
-                    "Invalid port number format. Using default port 9000.",
-                    "Port Error",
-                    JOptionPane.ERROR_MESSAGE
+                        null,
+                        "Invalid port number format. Using default port 9000.",
+                        "Port Error",
+                        JOptionPane.ERROR_MESSAGE
                 );
             }
         }
